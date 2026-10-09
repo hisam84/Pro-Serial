@@ -5,6 +5,7 @@ import { loginAction, type FormState } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Banner } from "@/components/ui/card";
 import { Field, Input } from "@/components/ui/form";
+import { PasswordInput } from "@/components/ui/password-input";
 
 export function LoginForm() {
   const [state, formAction, pending] = useActionState<FormState, FormData>(
@@ -30,10 +31,9 @@ export function LoginForm() {
       </Field>
 
       <Field label="Password" htmlFor="password" required>
-        <Input
+        <PasswordInput
           id="password"
           name="password"
-          type="password"
           autoComplete="current-password"
           placeholder="Enter password"
           required

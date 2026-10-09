@@ -5,7 +5,8 @@ import { useActionState, useEffect } from "react";
 import { changePasswordAction, type FormState } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Banner } from "@/components/ui/card";
-import { Field, Input } from "@/components/ui/form";
+import { Field } from "@/components/ui/form";
+import { PasswordInput } from "@/components/ui/password-input";
 
 export function PasswordForm() {
   const router = useRouter();
@@ -40,10 +41,9 @@ export function PasswordForm() {
         required
         error={state.fieldErrors?.currentPassword}
       >
-        <Input
+        <PasswordInput
           id="currentPassword"
           name="currentPassword"
-          type="password"
           autoComplete="current-password"
           required
           error={Boolean(state.fieldErrors?.currentPassword)}
@@ -57,10 +57,9 @@ export function PasswordForm() {
         error={state.fieldErrors?.newPassword}
         hint="At least 8 characters"
       >
-        <Input
+        <PasswordInput
           id="newPassword"
           name="newPassword"
-          type="password"
           autoComplete="new-password"
           required
           error={Boolean(state.fieldErrors?.newPassword)}
@@ -73,10 +72,9 @@ export function PasswordForm() {
         required
         error={state.fieldErrors?.confirmPassword}
       >
-        <Input
+        <PasswordInput
           id="confirmPassword"
           name="confirmPassword"
-          type="password"
           autoComplete="new-password"
           required
           error={Boolean(state.fieldErrors?.confirmPassword)}
