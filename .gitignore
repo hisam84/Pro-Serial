@@ -19,5 +19,5 @@ pglite-data/
 *.pem
 npm-debug.log*
 coverage/
-.tsbuildinfo
+*.tsbuildinfo
 next-env.d.ts
