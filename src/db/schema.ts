@@ -72,6 +72,7 @@ export const users = pgTable(
     /** Nullable ONLY for platform-level super admin accounts. */
     clinicId: uuid("clinic_id").references(() => clinics.id),
     name: text("name").notNull(),
+    phone: text("phone").notNull().default(""),
     /** Normalized (lowercase) unique login identifier. */
     username: text("username").notNull(),
     passwordHash: text("password_hash").notNull(),

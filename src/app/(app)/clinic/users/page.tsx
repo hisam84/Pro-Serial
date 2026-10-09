@@ -68,6 +68,9 @@ export default async function StaffPage() {
                         )}
                       </div>
                       <p className="text-[12px] text-slate-500">{a.username}</p>
+                      {a.phone && (
+                        <p className="text-[12px] text-slate-500">{a.phone}</p>
+                      )}
                       <p className="mt-0.5 text-[12px] text-slate-500">
                         Doctors:{" "}
                         {a.doctorNames.length > 0

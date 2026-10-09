@@ -23,6 +23,7 @@ function ok<T>(data: T): ServiceResult<T> {
 export interface AttendantListItem {
   id: string;
   name: string;
+  phone: string;
   username: string;
   status: "active" | "disabled";
   mustChangePassword: boolean;
@@ -39,6 +40,7 @@ export async function listAttendants(
     .select({
       id: users.id,
       name: users.name,
+      phone: users.phone,
       username: users.username,
       status: users.status,
       mustChangePassword: users.mustChangePassword,
@@ -73,6 +75,7 @@ export async function createAttendant(
   actor: SessionUser,
   input: {
     name: string;
+    phone?: string;
     username: string;
     password: string;
     doctorIds: string[];
@@ -103,6 +106,7 @@ export async function createAttendant(
         .values({
           clinicId: actor.clinicId,
           name: input.name.trim(),
+          phone: input.phone?.trim() ?? "",
           username,
           passwordHash,
           role: "attendant",
@@ -126,7 +130,12 @@ export async function createAttendant(
         entityType: "user",
         entityId: user.id,
         action: "create_attendant",
-        after: { name: user.name, username: user.username, doctorIds },
+        after: {
+          name: user.name,
+          phone: user.phone,
+          username: user.username,
+          doctorIds,
+        },
       });
 
       return { userId: user.id, username: user.username };
@@ -144,6 +153,7 @@ export async function updateAttendant(
   input: {
     userId: string;
     name: string;
+    phone?: string;
     status: "active" | "disabled";
     doctorIds: string[];
   },
@@ -162,6 +172,7 @@ export async function updateAttendant(
         .update(users)
         .set({
           name: input.name.trim(),
+          phone: input.phone?.trim() ?? "",
           status: input.status,
           updatedAt: new Date(),
         })
@@ -185,8 +196,17 @@ export async function updateAttendant(
         entityType: "user",
         entityId: input.userId,
         action: "update_attendant",
-        before: { name: existing.name, status: existing.status },
-        after: { name: input.name, status: input.status, doctorIds },
+        before: {
+          name: existing.name,
+          phone: existing.phone,
+          status: existing.status,
+        },
+        after: {
+          name: input.name,
+          phone: input.phone?.trim() ?? "",
+          status: input.status,
+          doctorIds,
+        },
       });
     });
     return ok({ userId: input.userId });

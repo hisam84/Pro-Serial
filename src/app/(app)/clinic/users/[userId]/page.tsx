@@ -46,6 +46,7 @@ export default async function StaffDetailPage({ params }: PageProps) {
             attendant={{
               id: attendant.id,
               name: attendant.name,
+              phone: attendant.phone,
               username: attendant.username,
               status: attendant.status,
               doctorIds: details?.doctorIds ?? [],

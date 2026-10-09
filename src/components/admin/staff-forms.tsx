@@ -96,6 +96,19 @@ export function CreateAttendantForm({
         <Input id="name" name="name" required error={Boolean(errors.name)} />
       </Field>
 
+      <Field label="Mobile number" htmlFor="phone" error={errors.phone}>
+        <Input
+          id="phone"
+          name="phone"
+          type="tel"
+          autoComplete="tel"
+          inputMode="tel"
+          maxLength={40}
+          placeholder="Enter mobile number"
+          error={Boolean(errors.phone)}
+        />
+      </Field>
+
       <Field
         label="Username"
         htmlFor="username"
@@ -160,6 +173,7 @@ export function EditAttendantForm({
   attendant: {
     id: string;
     name: string;
+    phone: string;
     username: string;
     status: string;
     doctorIds: string[];
@@ -187,6 +201,20 @@ export function EditAttendantForm({
           defaultValue={attendant.name}
           required
           error={Boolean(errors.name)}
+        />
+      </Field>
+
+      <Field label="Mobile number" htmlFor="phone" error={errors.phone}>
+        <Input
+          id="phone"
+          name="phone"
+          type="tel"
+          autoComplete="tel"
+          inputMode="tel"
+          maxLength={40}
+          placeholder="Enter mobile number"
+          defaultValue={attendant.phone}
+          error={Boolean(errors.phone)}
         />
       </Field>
 

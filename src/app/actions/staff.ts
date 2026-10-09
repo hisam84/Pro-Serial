@@ -52,6 +52,7 @@ export async function createAttendantAction(
 
   const parsed = attendantCreateSchema.safeParse({
     name: formData.get("name"),
+    phone: formData.get("phone") ?? "",
     username: formData.get("username"),
     password: formData.get("password"),
     doctorIds: doctorIdsFrom(formData),
@@ -83,6 +84,7 @@ export async function updateAttendantAction(
   const parsed = attendantUpdateSchema.safeParse({
     userId: formData.get("userId"),
     name: formData.get("name"),
+    phone: formData.get("phone") ?? "",
     status: formData.get("status") === "disabled" ? "disabled" : "active",
     doctorIds: doctorIdsFrom(formData),
   });

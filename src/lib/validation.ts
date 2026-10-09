@@ -97,6 +97,7 @@ export const smsTemplateSchema = z.object({
 
 export const attendantCreateSchema = z.object({
   name: z.string().trim().min(2, "Name is required.").max(120),
+  phone: z.string().trim().max(40).default(""),
   username: usernameSchema,
   password: passwordSchema,
   doctorIds: z.array(uuidSchema).default([]),
@@ -106,6 +107,7 @@ export type AttendantCreateInput = z.infer<typeof attendantCreateSchema>;
 export const attendantUpdateSchema = z.object({
   userId: uuidSchema,
   name: z.string().trim().min(2, "Name is required.").max(120),
+  phone: z.string().trim().max(40).default(""),
   status: z.enum(["active", "disabled"]).default("active"),
   doctorIds: z.array(uuidSchema).default([]),
 });

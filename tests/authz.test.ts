@@ -12,7 +12,12 @@ import {
 } from "@/lib/rbac";
 import { createClinic, setClinicStatus } from "@/lib/clinics";
 import { createDoctor, updateDoctor } from "@/lib/doctors";
-import { createAttendant, updateAttendant, resetAttendantPassword } from "@/lib/staff";
+import {
+  createAttendant,
+  getAttendant,
+  resetAttendantPassword,
+  updateAttendant,
+} from "@/lib/staff";
 import { buildFixture, serialParams } from "./helpers";
 
 describe("tenant isolation & authorization", () => {
@@ -198,11 +203,15 @@ describe("tenant isolation & authorization", () => {
     // clinic admin cannot attach another clinic's doctor to an attendant
     const created = await createAttendant(f.db, f.clinicAdmin as never, {
       name: "New attendant",
+      phone: "01712345678",
       username: "newatt",
       password: "password123",
       doctorIds: [f.doctorId, f.otherDoctorId],
     });
     expect(created.ok).toBe(true);
+    expect(
+      (await getAttendant(f.db, f.clinicId, created.data!.userId))?.phone,
+    ).toBe("01712345678");
 
     const ids = await accessibleDoctorIds(f.db, {
       id: created.data!.userId,
@@ -241,9 +250,13 @@ describe("tenant isolation & authorization", () => {
     await updateAttendant(f.db, f.clinicAdmin as never, {
       userId: created.data!.userId,
       name: "Attendant",
+      phone: "01812345678",
       status: "active",
       doctorIds: [f.otherDoctorId], // foreign doctor — must be filtered out
     });
+    expect(
+      (await getAttendant(f.db, f.clinicId, created.data!.userId))?.phone,
+    ).toBe("01812345678");
 
     const ids = await accessibleDoctorIds(f.db, {
       id: created.data!.userId,
