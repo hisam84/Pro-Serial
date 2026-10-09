@@ -17,6 +17,7 @@ Everything is enforced server-side with role-based access control and a full aud
 | Serials | Server-generated, per **clinic + doctor + date + patient type** (new/old) sequences. Cancelled numbers are **never reused**. Concurrency-safe allocation via a counter table (`INSERT … ON CONFLICT DO UPDATE … RETURNING`). |
 | References | Separate **Reference** section above numbered serials, never consume serial numbers. |
 | SMS | Per-doctor templates with variables, preview with sample data, hand-off to the phone's native SMS app (`sms:` link) — the app **never claims an SMS was sent**, has no gateway integration, and offers copy-to-clipboard fallback. |
+| PWA | Installable from supported browsers with app icons and standalone display. Patient and clinic data are not cached for offline access. |
 | Reports | 6 print-friendly reports (date-wise, new patient, old patient, doctor-wise, cancellation, daily summary) with date/doctor/type/status filters. **No CSV export** (spec). |
 | RBAC | `super_admin` (clinic operations only — never patient data), `clinic_admin` (own clinic), `attendant` (assigned doctors only). Doctor login is deferred but the schema is ready. |
 | Security | bcrypt passwords, DB-backed sessions with expiry + secure cookies, login rate limiting, normalized mobile numbers, IDOR-safe queries, audit log of all sensitive actions. |
@@ -40,6 +41,9 @@ npm run dev                       # http://localhost:3000
 > `.pglite-data/`, zero setup). It is for development/demos only — set `DATABASE_URL` for real
 > deployments. One PGlite directory can only be opened by one process at a time: **stop `npm run dev`
 > before `npm run db:seed` / `npm run db:migrate`**, and vice versa.
+
+On supported browsers, use the browser's **Install app** option to install Serial Pro.
+Patient and clinic data requires a live connection and is not cached for offline use.
 
 ### Demo credentials (`npm run db:seed`)
 

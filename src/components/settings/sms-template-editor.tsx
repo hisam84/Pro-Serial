@@ -30,6 +30,10 @@ export function SmsTemplateEditor({ doctors }: { doctors: TemplateDoctor[] }) {
   const [template, setTemplate] = useState(
     current?.smsTemplate || DEFAULT_SMS_TEMPLATE,
   );
+  const [copyStatus, setCopyStatus] = useState<{
+    variable: string;
+    error?: string;
+  } | null>(null);
   const [state, formAction, pending] = useActionState<FormState, FormData>(
     saveSmsTemplateAction,
     {},
@@ -47,8 +51,18 @@ export function SmsTemplateEditor({ doctors }: { doctors: TemplateDoctor[] }) {
     setTemplate(doc?.smsTemplate || DEFAULT_SMS_TEMPLATE);
   }
 
-  function insertVariable(name: string) {
-    setTemplate((t) => `${t}${t.endsWith("\n") || t === "" ? "" : " "}{{${name}}}`);
+  async function copyVariable(name: string) {
+    const variable = `{{${name}}}`;
+    try {
+      await navigator.clipboard.writeText(variable);
+      setCopyStatus({ variable });
+      window.setTimeout(() => setCopyStatus(null), 2000);
+    } catch {
+      setCopyStatus({
+        variable,
+        error: "Could not copy. Check clipboard permissions and try again.",
+      });
+    }
   }
 
   if (doctors.length === 0) {
@@ -100,20 +114,30 @@ export function SmsTemplateEditor({ doctors }: { doctors: TemplateDoctor[] }) {
 
         <div>
           <p className="mb-1.5 text-[13px] font-medium text-slate-700">
-            Variables (click to insert)
+            Variables (click to copy)
           </p>
           <div className="flex flex-wrap gap-1.5">
             {SMS_VARIABLES.map((v) => (
               <button
                 key={v}
                 type="button"
-                onClick={() => insertVariable(v)}
+                onClick={() => void copyVariable(v)}
                 className="rounded-full border border-slate-300 bg-white px-2.5 py-1 font-mono text-[11px] text-slate-600 hover:border-brand-500 hover:bg-brand-50 hover:text-brand-700"
               >
                 {`{{${v}}}`}
               </button>
             ))}
           </div>
+          {copyStatus && (
+            <p
+              role={copyStatus.error ? "alert" : "status"}
+              className={`mt-2 text-[12px] ${
+                copyStatus.error ? "text-red-600" : "text-emerald-700"
+              }`}
+            >
+              {copyStatus.error ?? `${copyStatus.variable} copied to clipboard.`}
+            </p>
+          )}
           {unknown.length > 0 && (
             <p className="mt-2 text-[12px] text-amber-700">
               Unknown variables: {unknown.join(", ")} — they stay unchanged in the
