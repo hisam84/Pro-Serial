@@ -4,6 +4,7 @@ import { getSessionUser } from "@/lib/auth";
 import { clinics } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { BottomNav, SideNav, TopBar } from "@/components/shell/shell";
+import { PwaInstallPrompt } from "@/components/shell/pwa-install-prompt";
 
 export default async function AppLayout({
   children,
@@ -27,6 +28,7 @@ export default async function AppLayout({
   return (
     <div className="min-h-dvh">
       <TopBar userName={user.name} clinicName={clinicName} role={user.role} />
+      <PwaInstallPrompt />
       <div className="mx-auto flex max-w-6xl">
         <SideNav role={user.role} />
         <main className="min-w-0 flex-1 px-4 pb-24 pt-4 sm:px-6 lg:pb-10 lg:pt-6">

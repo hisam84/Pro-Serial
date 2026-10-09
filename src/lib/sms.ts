@@ -6,6 +6,7 @@
  * are left untouched (so typos are visible) and never throw.
  */
 import type { PatientType } from "@/db/schema";
+import { formatDateWithDay } from "@/lib/utils";
 
 export const SMS_VARIABLES = [
   "patient_name",
@@ -13,7 +14,9 @@ export const SMS_VARIABLES = [
   "patient_address",
   "patient_type",
   "serial_number",
+  "serial_number_bangla",
   "appointment_date",
+  "appointment_date_bangla",
   "doctor_name",
   "clinic_name",
   "reference_details",
@@ -27,7 +30,9 @@ export interface SmsRenderInput {
   patient_address: string;
   patient_type: string;
   serial_number: string;
+  serial_number_bangla: string;
   appointment_date: string;
+  appointment_date_bangla: string;
   doctor_name: string;
   clinic_name: string;
   reference_details: string;
@@ -49,6 +54,40 @@ Thank you for choosing us again.`;
 export const REFERENCE_SERIAL_LABEL = "Not applicable";
 
 const VARIABLE_PATTERN = /\{\{\s*([a-z_][a-z0-9_]*)\s*\}\}/g;
+const BANGLA_DIGITS = "০১২৩৪৫৬৭৮৯";
+
+function toBanglaDigits(value: string): string {
+  return value.replace(/\d/g, (digit) => BANGLA_DIGITS[Number(digit)]);
+}
+
+function formatBanglaAppointmentDate(isoDate: string): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(isoDate);
+  if (!match) return isoDate;
+
+  const [, year, month, day] = match;
+  const date = new Date(
+    Date.UTC(Number(year), Number(month) - 1, Number(day), 12),
+  );
+  if (
+    date.getUTCFullYear() !== Number(year) ||
+    date.getUTCMonth() !== Number(month) - 1 ||
+    date.getUTCDate() !== Number(day)
+  ) {
+    return isoDate;
+  }
+
+  const parts = new Intl.DateTimeFormat("bn-BD-u-nu-beng", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  }).formatToParts(date);
+  const part = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((item) => item.type === type)?.value ?? "";
+
+  return `${part("weekday")}, ${part("day")} ${part("month")} ${part("year")}`;
+}
 
 export function renderSmsTemplate(
   template: string,
@@ -101,7 +140,15 @@ export function buildSmsInput(params: {
       : params.serialNumber != null
         ? String(params.serialNumber)
         : "",
-    appointment_date: params.appointmentDate,
+    serial_number_bangla: params.isReference
+      ? "প্রযোজ্য নয়"
+      : params.serialNumber != null
+        ? toBanglaDigits(String(params.serialNumber))
+        : "",
+    appointment_date: formatDateWithDay(params.appointmentDate),
+    appointment_date_bangla: formatBanglaAppointmentDate(
+      params.appointmentDate,
+    ),
     doctor_name: params.doctorName,
     clinic_name: params.clinicName,
     reference_details: params.referenceDetails ?? "",
@@ -119,7 +166,9 @@ export function sampleSmsInput(): SmsRenderInput {
     patient_address: "Mirpur-10, Dhaka",
     patient_type: "New patient",
     serial_number: "3",
-    appointment_date: "9 October 2026",
+    serial_number_bangla: "৩",
+    appointment_date: "9 October 2026 (Friday)",
+    appointment_date_bangla: "শুক্রবার, ৯ অক্টোবর ২০২৬",
     doctor_name: "Dr. Kamal Uddin",
     clinic_name: "Demo Medical",
     reference_details: "Dr. Selim Mia",

@@ -41,7 +41,9 @@ describe("SMS template rendering", () => {
       "{{patient_address}}",
       "{{patient_type}}",
       "{{serial_number}}",
+      "{{serial_number_bangla}}",
       "{{appointment_date}}",
+      "{{appointment_date_bangla}}",
       "{{doctor_name}}",
       "{{clinic_name}}",
       "{{reference_details}}",
@@ -54,7 +56,9 @@ describe("SMS template rendering", () => {
         input.patient_address,
         input.patient_type,
         input.serial_number,
+        input.serial_number_bangla,
         input.appointment_date,
+        input.appointment_date_bangla,
         input.doctor_name,
         input.clinic_name,
         input.reference_details,
@@ -93,6 +97,27 @@ describe("SMS template rendering", () => {
       isReference: true,
     });
     expect(input.serial_number).toBe(REFERENCE_SERIAL_LABEL);
+    expect(input.serial_number_bangla).toBe("প্রযোজ্য নয়");
+  });
+
+  it("includes the weekday in appointment date variables and renders Bengali values", () => {
+    const input = buildSmsInput({
+      patientName: "Test",
+      patientMobile: "01711111111",
+      patientAddress: "",
+      patientType: "new",
+      serialNumber: 27,
+      appointmentDate: "2026-10-09",
+      doctorName: "Doc",
+      clinicName: "Clinic",
+      referenceDetails: null,
+      isReference: false,
+    });
+
+    expect(input.appointment_date).toBe("9 October 2026 (Friday)");
+    expect(input.appointment_date_bangla).toBe("শুক্রবার, ৯ অক্টোবর ২০২৬");
+    expect(input.serial_number).toBe("27");
+    expect(input.serial_number_bangla).toBe("২৭");
   });
 
   it("renders regular serial numbers numerically", () => {
