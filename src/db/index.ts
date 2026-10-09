@@ -38,7 +38,7 @@ const MIGRATIONS_DIR = path.join(
 interface DbGlobal {
   __serialProPglite?: PGlite;
   __serialProPgClient?: ReturnType<typeof postgres>;
-  __serialProMigrated?: WeakSet<object>;
+  __serialProMigrationPromises?: WeakMap<PGlite, Promise<void>>;
 }
 
 const g = globalThis as DbGlobal;
@@ -81,12 +81,22 @@ export async function getDb(): Promise<Db> {
     return drizzlePg(getPostgresClient(url), { schema }) as unknown as Db;
   }
   const dir = process.env.PG_LITE_DIR ?? ".pglite-data";
-  const db = drizzlePglite(getPgLiteClient(dir), { schema }) as unknown as Db;
-  if (!g.__serialProMigrated) g.__serialProMigrated = new WeakSet();
-  if (!g.__serialProMigrated.has(db as object)) {
-    await applyMigrations(db, MIGRATIONS_DIR);
-    g.__serialProMigrated.add(db as object);
+  const client = getPgLiteClient(dir);
+  const db = drizzlePglite(client, { schema }) as unknown as Db;
+  if (!g.__serialProMigrationPromises) {
+    g.__serialProMigrationPromises = new WeakMap();
   }
+  let migrationPromise = g.__serialProMigrationPromises.get(client);
+  if (!migrationPromise) {
+    migrationPromise = applyMigrations(db, MIGRATIONS_DIR)
+      .then(() => undefined)
+      .catch((error: unknown) => {
+        g.__serialProMigrationPromises?.delete(client);
+        throw error;
+      });
+    g.__serialProMigrationPromises.set(client, migrationPromise);
+  }
+  await migrationPromise;
   return db;
 }
 
