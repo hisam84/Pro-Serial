@@ -65,6 +65,7 @@ export default async function SerialsPage({ searchParams }: PageProps) {
   const tabRaw = first(sp.tab);
   const tab: "all" | "new" | "old" =
     tabRaw === "new" || tabRaw === "old" ? tabRaw : "all";
+  const query = first(sp.q).trim();
 
   const rows = await listSerials(db, toActor(user), {
     date,
@@ -72,11 +73,28 @@ export default async function SerialsPage({ searchParams }: PageProps) {
   });
   const counts = summarizeCounts(rows);
 
-  const visible = rows.filter((r) => {
+  const queryLower = query.toLocaleLowerCase();
+  const queryDigits = query.replace(/\D/g, "");
+  const searchedRows = query
+    ? rows.filter((row) => {
+        const nameMatches = row.patientName
+          .toLocaleLowerCase()
+          .includes(queryLower);
+        const mobileMatches =
+          row.patientMobileDisplay.includes(query) ||
+          (queryDigits.length > 0 &&
+            row.patientMobile.replace(/\D/g, "").includes(queryDigits));
+        return nameMatches || mobileMatches;
+      })
+    : rows;
+
+  const queueRows = rows.filter((r) => {
     if (tab === "new") return r.patientType === "new" || r.isReference;
     if (tab === "old") return r.patientType === "old" || r.isReference;
     return true;
   });
+  const searchedIds = new Set(searchedRows.map((row) => row.id));
+  const visible = queueRows.filter((row) => searchedIds.has(row.id));
   const references = visible.filter((r) => r.isReference);
   const regular = visible.filter((r) => !r.isReference);
 
@@ -171,6 +189,7 @@ export default async function SerialsPage({ searchParams }: PageProps) {
       <SerialFilters
         date={date}
         doctorId={doctorId}
+        query={query}
         doctors={doctors}
         tab={tab}
         counts={counts}
@@ -205,8 +224,12 @@ export default async function SerialsPage({ searchParams }: PageProps) {
         )}
         {regular.length === 0 && references.length === 0 ? (
           <EmptyState
-            title="No serials on this date"
-            description="Add a patient serial from the “New serial” button above."
+            title={query ? "No patients found" : "No serials on this date"}
+            description={
+              query
+                ? "Try another patient name or mobile number."
+                : "Add a patient serial from the “New serial” button above."
+            }
             action={
               <Link
                 href={`/serials/new?doctorId=${encodeURIComponent(doctorId)}&date=${encodeURIComponent(date)}`}
@@ -219,15 +242,33 @@ export default async function SerialsPage({ searchParams }: PageProps) {
           />
         ) : (
           <ul className="space-y-2">
-            {regular.map((row) => (
-              <SerialCard
-                key={row.id}
-                row={toClientRow(row)}
-                canEdit
-                canChangeNumber={user.role === "clinic_admin"}
-                sms={smsFor(row)}
-              />
-            ))}
+            {regular.map((row) => {
+              const activeQueue = queueRows
+                .filter(
+                  (item) =>
+                    item.status === "active" &&
+                    item.patientType === row.patientType,
+                )
+                .sort(
+                  (a, b) => (a.serialNumber ?? 0) - (b.serialNumber ?? 0),
+                );
+              const queueIndex = activeQueue.findIndex(
+                (item) => item.id === row.id,
+              );
+              return (
+                <SerialCard
+                  key={row.id}
+                  row={toClientRow(row)}
+                  canEdit
+                  canChangeNumber={user.role === "clinic_admin"}
+                  canMoveUp={queueIndex > 0}
+                  canMoveDown={
+                    queueIndex >= 0 && queueIndex < activeQueue.length - 1
+                  }
+                  sms={smsFor(row)}
+                />
+              );
+            })}
           </ul>
         )}
       </section>

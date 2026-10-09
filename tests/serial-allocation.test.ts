@@ -6,6 +6,7 @@ import {
   changeSerialNumber,
   createSerialEntry,
   listSerials,
+  moveSerialNumber,
   updateSerialEntry,
 } from "@/lib/serials";
 import { buildFixture, serialParams } from "./helpers";
@@ -264,6 +265,60 @@ describe("serial allocation rules", () => {
     // future allocations avoid the manually-assigned number
     const c = await mk("01711111103");
     expect(c.data?.serialNumber).toBe(6);
+  });
+
+  it("moves serials up and down by swapping adjacent active queue positions", async () => {
+    const f = await buildFixture();
+    const make = (mobile: string) =>
+      createSerialEntry(
+        f.db,
+        serialParams({
+          actor: f.clinicAdmin,
+          doctorId: f.doctorId,
+          patientType: "new",
+          patientMobile: mobile,
+        }),
+      );
+    const first = await make("01711111201");
+    const second = await make("01711111202");
+    const third = await make("01711111203");
+
+    const denied = await moveSerialNumber(f.db, {
+      actor: f.attendant,
+      appointmentId: second.data!.appointment.id,
+      direction: "up",
+    });
+    expect(denied.ok).toBe(false);
+
+    const movedUp = await moveSerialNumber(f.db, {
+      actor: f.clinicAdmin,
+      appointmentId: third.data!.appointment.id,
+      direction: "up",
+    });
+    expect(movedUp.ok).toBe(true);
+    expect(movedUp.data?.serialNumber).toBe(2);
+
+    const afterUp = await listSerials(f.db, f.clinicAdmin, {
+      date: "2026-10-09",
+      doctorId: f.doctorId,
+      patientType: "new",
+    });
+    expect(afterUp.find((row) => row.id === second.data!.appointment.id)?.serialNumber).toBe(3);
+
+    const movedDown = await moveSerialNumber(f.db, {
+      actor: f.clinicAdmin,
+      appointmentId: third.data!.appointment.id,
+      direction: "down",
+    });
+    expect(movedDown.ok).toBe(true);
+    expect(movedDown.data?.serialNumber).toBe(3);
+
+    const firstCannotMoveUp = await moveSerialNumber(f.db, {
+      actor: f.clinicAdmin,
+      appointmentId: first.data!.appointment.id,
+      direction: "up",
+    });
+    expect(firstCannotMoveUp.ok).toBe(false);
   });
 
   it("rejects manual change onto a cancelled serial number", async () => {

@@ -5,12 +5,15 @@ import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useState } from "react";
 import {
   cancelSerialAction,
+  moveSerialNumberAction,
 } from "@/app/actions/serials";
 import type { SerialClientRow, SmsPayload } from "@/lib/serial-client";
 import type { FormState } from "@/app/actions/auth";
 import { Badge } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/ui/dialog";
 import {
+  ArrowDownIcon,
+  ArrowUpIcon,
   MessageIcon,
   PencilIcon,
   PhoneIcon,
@@ -28,11 +31,15 @@ export function SerialCard({
   row,
   canEdit,
   canChangeNumber,
+  canMoveUp = false,
+  canMoveDown = false,
   sms,
 }: {
   row: SerialClientRow;
   canEdit: boolean;
   canChangeNumber: boolean;
+  canMoveUp?: boolean;
+  canMoveDown?: boolean;
   /** Prebuilt SMS payload (server-rendered with the doctor's template). */
   sms: SmsPayload;
 }) {
@@ -43,6 +50,10 @@ export function SerialCard({
     cancelSerialAction,
     {},
   );
+  const [moveState, moveFormAction, movePending] = useActionState<
+    FormState,
+    FormData
+  >(moveSerialNumberAction, {});
 
   // Close the confirm dialog on success (render-adjust pattern).
   const [cancelPrevOk, setCancelPrevOk] = useState(state.ok);
@@ -54,6 +65,10 @@ export function SerialCard({
   useEffect(() => {
     if (state.ok) router.refresh();
   }, [state, router]);
+
+  useEffect(() => {
+    if (moveState.ok) router.refresh();
+  }, [moveState, router]);
 
   const cancelled = row.status === "cancelled";
 
@@ -67,29 +82,58 @@ export function SerialCard({
     >
       <div className="flex items-start gap-3">
         {/* Serial badge */}
-        {row.isReference ? (
-          <span
-            className="flex h-11 min-w-11 shrink-0 items-center justify-center rounded-lg border border-rose-300 bg-rose-100 px-2 text-[13px] font-bold text-rose-800"
-            aria-label="Reference entry"
-            title="Reference"
-          >
-            Ref
-          </span>
-        ) : (
-          <span
-            className={cn(
-              "flex h-11 min-w-11 shrink-0 items-center justify-center rounded-lg px-2 text-xl font-bold",
-              cancelled
-                ? "bg-red-100 text-red-400 line-through"
-                : row.patientType === "new"
-                  ? "bg-sky-100 text-sky-800"
-                  : "bg-violet-100 text-violet-800",
-            )}
-            aria-label={`Serial number ${row.serialNumber ?? ""}`}
-          >
-            {row.serialNumber != null ? toDigits(row.serialNumber) : "—"}
-          </span>
-        )}
+        <div className="flex shrink-0 items-center gap-1.5">
+          {canChangeNumber && !row.isReference && !cancelled && (
+            <form action={moveFormAction} className="flex flex-col">
+              <input type="hidden" name="appointmentId" value={row.id} />
+              <button
+                type="submit"
+                name="direction"
+                value="up"
+                disabled={!canMoveUp || movePending}
+                aria-label="Move serial up"
+                title="Move serial up"
+                className="flex size-7 items-center justify-center rounded-md text-slate-500 hover:bg-brand-50 hover:text-brand-700 disabled:cursor-not-allowed disabled:opacity-30"
+              >
+                <ArrowUpIcon size={16} />
+              </button>
+              <button
+                type="submit"
+                name="direction"
+                value="down"
+                disabled={!canMoveDown || movePending}
+                aria-label="Move serial down"
+                title="Move serial down"
+                className="flex size-7 items-center justify-center rounded-md text-slate-500 hover:bg-brand-50 hover:text-brand-700 disabled:cursor-not-allowed disabled:opacity-30"
+              >
+                <ArrowDownIcon size={16} />
+              </button>
+            </form>
+          )}
+          {row.isReference ? (
+            <span
+              className="flex h-11 min-w-11 shrink-0 items-center justify-center rounded-lg border border-rose-300 bg-rose-100 px-2 text-[13px] font-bold text-rose-800"
+              aria-label="Reference entry"
+              title="Reference"
+            >
+              Ref
+            </span>
+          ) : (
+            <span
+              className={cn(
+                "flex h-11 min-w-11 shrink-0 items-center justify-center rounded-lg px-2 text-xl font-bold",
+                cancelled
+                  ? "bg-red-100 text-red-400 line-through"
+                  : row.patientType === "new"
+                    ? "bg-sky-100 text-sky-800"
+                    : "bg-violet-100 text-violet-800",
+              )}
+              aria-label={`Serial number ${row.serialNumber ?? ""}`}
+            >
+              {row.serialNumber != null ? toDigits(row.serialNumber) : "—"}
+            </span>
+          )}
+        </div>
 
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -104,6 +148,12 @@ export function SerialCard({
             </Badge>
             {cancelled && <Badge variant="cancelled">Cancelled</Badge>}
           </div>
+
+          {moveState.error && (
+            <p role="alert" className="mt-2 text-right text-[12px] text-red-600">
+              {moveState.error}
+            </p>
+          )}
 
           <p className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[13px] text-slate-500">
             <a

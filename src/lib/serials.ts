@@ -670,6 +670,151 @@ export async function changeSerialNumber(
   return updated ? ok(updated) : fail("Could not change the serial number.");
 }
 
+/** Moves a serial one active position within its doctor/date/patient queue. */
+export async function moveSerialNumber(
+  db: Db,
+  params: {
+    actor: AuditActor;
+    appointmentId: string;
+    direction: "up" | "down";
+  },
+): Promise<ServiceResult<SerialRow>> {
+  if (!isClinicAdmin(params.actor)) {
+    return fail("Only clinic admins can change serial order.");
+  }
+  const existing = await getSerialForActor(db, params.actor, params.appointmentId);
+  if (!existing) return fail("Serial not found or you do not have permission.");
+  if (existing.isReference || existing.serialNumber == null) {
+    return fail("Reference entries have no serial number.");
+  }
+  if (existing.status === "cancelled") {
+    return fail("A cancelled serial number cannot be moved.");
+  }
+
+  const scope: SerialScope = {
+    clinicId: params.actor.clinicId as string,
+    doctorId: existing.doctorId,
+    appointmentDate: existing.appointmentDate,
+    patientType: existing.patientType,
+  };
+
+  try {
+    await db.transaction(async (tx) => {
+      const counterRows = rowsOf<{ last_number: number }>(await tx.execute(sql`
+        INSERT INTO serial_counters (clinic_id, doctor_id, appointment_date, patient_type, last_number)
+        VALUES (${scope.clinicId}, ${scope.doctorId}, ${scope.appointmentDate}, ${scope.patientType}, ${existing.serialNumber})
+        ON CONFLICT (clinic_id, doctor_id, appointment_date, patient_type)
+        DO UPDATE SET last_number = GREATEST(serial_counters.last_number, ${existing.serialNumber}), updated_at = now()
+        RETURNING last_number
+      `));
+
+      const lockedRows = rowsOf<{
+        id: string;
+        serial_number: number;
+        status: string;
+      }>(
+        await tx.execute(sql`
+          SELECT id, serial_number, status
+          FROM appointments
+          WHERE clinic_id = ${scope.clinicId}
+            AND doctor_id = ${scope.doctorId}
+            AND appointment_date = ${scope.appointmentDate}
+            AND patient_type = ${scope.patientType}
+            AND is_reference = false
+            AND serial_number IS NOT NULL
+          ORDER BY serial_number ASC
+          FOR UPDATE
+        `),
+      );
+      const activeRows = lockedRows.filter((row) => row.status === "active");
+      const currentIndex = activeRows.findIndex(
+        (row) => row.id === params.appointmentId,
+      );
+      const neighborIndex =
+        params.direction === "up" ? currentIndex - 1 : currentIndex + 1;
+      const neighbor = activeRows[neighborIndex];
+      if (currentIndex < 0) {
+        throw new Error("The serial is no longer active.");
+      }
+      if (!neighbor) {
+        throw new SerialMoveBoundaryError();
+      }
+
+      const current = activeRows[currentIndex];
+      const maximumNumber = lockedRows.reduce(
+        (max, row) => Math.max(max, row.serial_number),
+        counterRows[0]?.last_number ?? 0,
+      );
+      if (maximumNumber >= 2147483647) {
+        throw new Error("Could not find a temporary serial number.");
+      }
+      const temporaryNumber = maximumNumber + 1;
+
+      await tx
+        .update(appointments)
+        .set({
+          serialNumber: temporaryNumber,
+          updatedBy: params.actor.id,
+          updatedAt: new Date(),
+        })
+        .where(eq(appointments.id, current.id));
+      await tx
+        .update(appointments)
+        .set({
+          serialNumber: current.serial_number,
+          updatedBy: params.actor.id,
+          updatedAt: new Date(),
+        })
+        .where(eq(appointments.id, neighbor.id));
+      await tx
+        .update(appointments)
+        .set({
+          serialNumber: neighbor.serial_number,
+          updatedBy: params.actor.id,
+          updatedAt: new Date(),
+        })
+        .where(eq(appointments.id, current.id));
+
+      await writeAudit(tx, {
+        actor: params.actor,
+        entityType: "appointment",
+        entityId: current.id,
+        action: "reorder_serial",
+        before: { serial_number: current.serial_number },
+        after: { serial_number: neighbor.serial_number },
+      });
+      await writeAudit(tx, {
+        actor: params.actor,
+        entityType: "appointment",
+        entityId: neighbor.id,
+        action: "reorder_serial",
+        before: { serial_number: neighbor.serial_number },
+        after: { serial_number: current.serial_number },
+      });
+    });
+  } catch (e) {
+    if (e instanceof SerialMoveBoundaryError) {
+      return fail(
+        params.direction === "up"
+          ? "This serial is already first in the queue."
+          : "This serial is already last in the queue.",
+      );
+    }
+    console.error("moveSerialNumber failed:", e);
+    return fail("Could not change the serial order.");
+  }
+
+  const updated = await getSerialForActor(db, params.actor, params.appointmentId);
+  return updated ? ok(updated) : fail("Could not change the serial order.");
+}
+
+class SerialMoveBoundaryError extends Error {
+  constructor() {
+    super("serial is already at the queue boundary");
+    this.name = "SerialMoveBoundaryError";
+  }
+}
+
 class DuplicateSerialError extends Error {
   constructor() {
     super("duplicate serial");

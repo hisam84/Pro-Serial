@@ -3,19 +3,21 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useTransition } from "react";
 import { cn } from "@/lib/utils";
-import { CalendarIcon, StethoscopeIcon } from "@/components/ui/icons";
+import { CalendarIcon, SearchIcon, StethoscopeIcon } from "@/components/ui/icons";
 import type { DoctorOption } from "./serial-form";
 import { toDigits } from "@/lib/utils";
 
 export function SerialFilters({
   date,
   doctorId,
+  query,
   doctors,
   tab,
   counts,
 }: {
   date: string;
   doctorId: string;
+  query: string;
   doctors: DoctorOption[];
   tab: "all" | "new" | "old";
   counts: { activeNew: number; activeOld: number; activeReference: number; cancelled: number };
@@ -91,6 +93,37 @@ export function SerialFilters({
           )
         )}
       </div>
+
+      <form
+        role="search"
+        onSubmit={(event) => {
+          event.preventDefault();
+          const formData = new FormData(event.currentTarget);
+          update({ q: String(formData.get("q") ?? "").trim() });
+        }}
+        className="flex gap-2"
+      >
+        <label className="relative min-w-0 flex-1">
+          <span className="sr-only">Search patient name or mobile number</span>
+          <SearchIcon
+            size={18}
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+          />
+          <input
+            type="search"
+            name="q"
+            defaultValue={query}
+            placeholder="Patient name or mobile number"
+            className="h-11 w-full rounded-lg border border-slate-300 bg-white pl-10 pr-3 text-[15px] text-slate-800 outline-none placeholder:text-slate-400 focus:border-brand-600 focus:ring-2 focus:ring-brand-600/25"
+          />
+        </label>
+        <button
+          type="submit"
+          className="min-h-11 shrink-0 rounded-lg bg-brand-700 px-4 text-[14px] font-medium text-white hover:bg-brand-800"
+        >
+          Search
+        </button>
+      </form>
 
       {/* Category tabs */}
       <div

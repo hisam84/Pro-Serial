@@ -13,6 +13,7 @@ import {
   changeSerialNumber,
   createSerialEntry,
   findPatientsByMobile,
+  moveSerialNumber,
   updateSerialEntry,
   type SerialRow,
 } from "@/lib/serials";
@@ -23,6 +24,7 @@ import {
   serialCancelSchema,
   serialChangeNumberSchema,
   serialCreateSchema,
+  serialMoveSchema,
   serialUpdateSchema,
 } from "@/lib/validation";
 import { clinics, doctors } from "@/db/schema";
@@ -320,6 +322,28 @@ export async function changeSerialNumberAction(
     };
   }
   return { ok: true, message: "Serial number changed." };
+}
+
+export async function moveSerialNumberAction(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const { db, user } = await requireSerialsUser();
+  const parsed = serialMoveSchema.safeParse({
+    appointmentId: formData.get("appointmentId"),
+    direction: formData.get("direction"),
+  });
+  if (!parsed.success) {
+    return { error: "Invalid serial move request." };
+  }
+
+  const result = await moveSerialNumber(db, {
+    actor: toActor(user),
+    appointmentId: parsed.data.appointmentId,
+    direction: parsed.data.direction,
+  });
+  if (!result.ok) return { error: result.error ?? "Could not change the serial order." };
+  return { ok: true, message: "Serial order updated." };
 }
 
 /* ── Existing patient lookup (suggestion only) ─────────────────────── */

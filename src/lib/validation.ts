@@ -165,6 +165,11 @@ export const serialChangeNumberSchema = z.object({
     .max(100000, "Serial number is too large."),
 });
 
+export const serialMoveSchema = z.object({
+  appointmentId: uuidSchema,
+  direction: z.enum(["up", "down"]),
+});
+
 /* ── Reports ───────────────────────────────────────────────────────── */
 
 export const reportFilterSchema = z.object({
