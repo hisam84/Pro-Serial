@@ -1,0 +1,23 @@
+# dependencies / build
+node_modules/
+.next/
+out/
+build/
+dist/
+
+# env & secrets
+.env
+.env.local
+.env*.local
+
+# dev database (PGlite)
+.pglite-data/
+pglite-data/
+
+# misc
+.DS_Store
+*.pem
+npm-debug.log*
+coverage/
+.tsbuildinfo
+next-env.d.ts
