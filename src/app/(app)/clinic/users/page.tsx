@@ -64,7 +64,7 @@ export default async function StaffPage() {
                           {a.status === "active" ? "Active" : "Inactive"}
                         </Badge>
                         {a.mustChangePassword && (
-                          <Badge variant="reference">Password change pending</Badge>
+                          <Badge variant="pending">Password change pending</Badge>
                         )}
                       </div>
                       <p className="text-[12px] text-slate-500">{a.username}</p>

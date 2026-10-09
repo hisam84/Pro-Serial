@@ -42,8 +42,11 @@ export async function createDoctorAction(
     specialty: formData.get("specialty") ?? "",
     phone: formData.get("phone") ?? "",
     instructions: formData.get("instructions") ?? "",
-    smsTemplate: formData.get("smsTemplate")
-      ? String(formData.get("smsTemplate"))
+    smsTemplateNew: formData.get("smsTemplateNew")
+      ? String(formData.get("smsTemplateNew"))
+      : null,
+    smsTemplateOld: formData.get("smsTemplateOld")
+      ? String(formData.get("smsTemplateOld"))
       : null,
     status: formData.get("status") === "inactive" ? "inactive" : "active",
   });
@@ -70,8 +73,11 @@ export async function updateDoctorAction(
     specialty: formData.get("specialty") ?? "",
     phone: formData.get("phone") ?? "",
     instructions: formData.get("instructions") ?? "",
-    smsTemplate: formData.get("smsTemplate")
-      ? String(formData.get("smsTemplate"))
+    smsTemplateNew: formData.get("smsTemplateNew")
+      ? String(formData.get("smsTemplateNew"))
+      : null,
+    smsTemplateOld: formData.get("smsTemplateOld")
+      ? String(formData.get("smsTemplateOld"))
       : null,
     status: formData.get("status") === "inactive" ? "inactive" : "active",
   });
@@ -96,6 +102,7 @@ export async function saveSmsTemplateAction(
 
   const parsed = smsTemplateSchema.safeParse({
     doctorId: formData.get("doctorId"),
+    patientType: formData.get("patientType"),
     smsTemplate: formData.get("smsTemplate"),
   });
   if (!parsed.success) {
@@ -107,6 +114,7 @@ export async function saveSmsTemplateAction(
     user,
     parsed.data.doctorId,
     parsed.data.smsTemplate,
+    parsed.data.patientType,
   );
   if (!result.ok) return { error: result.error };
   return { ok: true, message: "SMS template saved." };

@@ -21,8 +21,7 @@ export default async function SmsTemplatesPage() {
         <LinkBack href="/settings">Settings</LinkBack>
         <h1 className="mt-1 text-xl font-bold text-slate-900">SMS template</h1>
         <p className="text-[13px] text-slate-500">
-          Set a separate message for each doctor. The default template is used
-          when none is set.
+          Set a separate message for new and old patients for each doctor.
         </p>
       </div>
 
@@ -30,7 +29,8 @@ export default async function SmsTemplatesPage() {
         doctors={doctors.map((d) => ({
           id: d.id,
           name: d.name,
-          smsTemplate: d.smsTemplate,
+          smsTemplateNew: d.smsTemplateNew,
+          smsTemplateOld: d.smsTemplateOld,
         }))}
       />
     </div>

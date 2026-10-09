@@ -83,14 +83,16 @@ export const doctorInputSchema = z.object({
   specialty: z.string().trim().max(120).default(""),
   phone: z.string().trim().max(40).default(""),
   instructions: z.string().trim().max(600).default(""),
-  smsTemplate: z.string().trim().max(1200).nullable().default(null),
+  smsTemplateNew: z.string().trim().max(1200).nullable().default(null),
+  smsTemplateOld: z.string().trim().max(1200).nullable().default(null),
   status: z.enum(["active", "inactive"]).default("active"),
 });
 export type DoctorInput = z.infer<typeof doctorInputSchema>;
 
 export const smsTemplateSchema = z.object({
   doctorId: uuidSchema,
-  smsTemplate: z.string().trim().min(1, "Template cannot be empty.").max(1200),
+  patientType: z.enum(["new", "old"]),
+  smsTemplate: z.string().trim().max(1200),
 });
 
 /* ── Users (attendants / clinic admin) ─────────────────────────────── */

@@ -84,11 +84,15 @@ export default async function SerialsPage({ searchParams }: PageProps) {
   const doctorIds = [...new Set(rows.map((r) => r.doctorId))];
   const templateRows = doctorIds.length
     ? await db
-        .select({ id: doctorsTable.id, smsTemplate: doctorsTable.smsTemplate })
+        .select({
+          id: doctorsTable.id,
+          smsTemplateNew: doctorsTable.smsTemplateNew,
+          smsTemplateOld: doctorsTable.smsTemplateOld,
+        })
         .from(doctorsTable)
         .where(inArray(doctorsTable.id, doctorIds))
     : [];
-  const templateById = new Map(templateRows.map((t) => [t.id, t.smsTemplate]));
+  const templateById = new Map(templateRows.map((t) => [t.id, t]));
 
   function smsFor(row: SerialRow): SmsPayload {
     const input = buildSmsInput({
@@ -104,7 +108,13 @@ export default async function SerialsPage({ searchParams }: PageProps) {
       isReference: row.isReference,
     });
     const message = renderSmsTemplate(
-      effectiveSmsTemplate({ smsTemplate: templateById.get(row.doctorId) ?? null }),
+      effectiveSmsTemplate(
+        templateById.get(row.doctorId) ?? {
+          smsTemplateNew: null,
+          smsTemplateOld: null,
+        },
+        row.patientType,
+      ),
       input,
     );
     const mobile = normalizeMobile(row.patientMobileDisplay);
@@ -153,7 +163,7 @@ export default async function SerialsPage({ searchParams }: PageProps) {
       <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
         <StatCard label="New patient" value={toDigits(counts.activeNew)} accent="sky" />
         <StatCard label="Old patient" value={toDigits(counts.activeOld)} accent="violet" />
-        <StatCard label="Reference" value={toDigits(counts.activeReference)} accent="amber" />
+        <StatCard label="Reference" value={toDigits(counts.activeReference)} accent="rose" />
         <StatCard label="Cancelled" value={toDigits(counts.cancelled)} accent="red" />
       </div>
 
@@ -169,7 +179,7 @@ export default async function SerialsPage({ searchParams }: PageProps) {
       {/* Reference entries — always at the top, without serial numbers */}
       {references.length > 0 && (
         <section aria-label="Reference">
-          <h2 className="mb-2 text-[13px] font-semibold uppercase tracking-wide text-amber-700">
+          <h2 className="mb-2 text-[13px] font-semibold uppercase tracking-wide text-rose-700">
             References ({toDigits(references.length)})
           </h2>
           <ul className="space-y-2">

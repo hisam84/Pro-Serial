@@ -30,7 +30,7 @@ export function ReportTable({
               r.status === "cancelled"
                 ? "border-red-100 bg-red-50/40"
                 : r.isReference
-                  ? "border-amber-200 bg-amber-50/40"
+                  ? "border-rose-200 bg-rose-50/40"
                   : "border-slate-200 bg-white"
             }`}
           >
@@ -44,7 +44,7 @@ export function ReportTable({
                   {r.patientAddress ? ` · ${r.patientAddress}` : ""}
                 </p>
                 {r.isReference && r.referenceDetails && (
-                  <p className="mt-0.5 text-[12px] text-amber-700">
+                  <p className="mt-0.5 text-[12px] text-rose-700">
                     Reference: {r.referenceDetails}
                   </p>
                 )}
@@ -53,7 +53,13 @@ export function ReportTable({
                 {r.isReference ? (
                   <Badge variant="reference">Reference</Badge>
                 ) : (
-                  <span className="flex h-8 min-w-8 items-center justify-center rounded-lg bg-brand-700 px-1.5 text-base font-bold text-white">
+                  <span
+                    className={`flex h-8 min-w-8 items-center justify-center rounded-lg px-1.5 text-base font-bold ${
+                      r.patientType === "new"
+                        ? "bg-sky-100 text-sky-800"
+                        : "bg-violet-100 text-violet-800"
+                    }`}
+                  >
                     {r.serialNumber != null ? toDigits(r.serialNumber) : "—"}
                   </span>
                 )}
@@ -132,7 +138,7 @@ export function SummaryGrid({
   const items: [string, number, string][] = [
     ["New patient", summary.activeNew, "text-sky-700"],
     ["Old patient", summary.activeOld, "text-violet-700"],
-    ["Reference", summary.activeReference, "text-amber-700"],
+    ["Reference", summary.activeReference, "text-rose-700"],
     ["Active serials", summary.activeTotal, "text-brand-700"],
     ["Cancelled", summary.cancelled, "text-red-600"],
     ["Total entries", summary.totalEntries, "text-slate-800"],

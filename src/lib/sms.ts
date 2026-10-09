@@ -38,6 +38,14 @@ export const DEFAULT_SMS_TEMPLATE = `{{clinic_name}} — {{doctor_name}}
 Dear {{patient_name}}, your appointment date is {{appointment_date}}. Serial: {{serial_number}}.
 Thank you.`;
 
+export const DEFAULT_NEW_PATIENT_SMS_TEMPLATE = `{{clinic_name}} — {{doctor_name}}
+Dear {{patient_name}}, welcome. Your appointment date is {{appointment_date}}. Serial: {{serial_number}}.
+Thank you.`;
+
+export const DEFAULT_OLD_PATIENT_SMS_TEMPLATE = `{{clinic_name}} — {{doctor_name}}
+Dear {{patient_name}}, your appointment date is {{appointment_date}}. Serial: {{serial_number}}.
+Thank you for choosing us again.`;
+
 export const REFERENCE_SERIAL_LABEL = "Not applicable";
 
 const VARIABLE_PATTERN = /\{\{\s*([a-z_][a-z0-9_]*)\s*\}\}/g;

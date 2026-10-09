@@ -63,7 +63,9 @@ export default async function DoctorsPage() {
                         <Badge variant={d.status === "active" ? "active" : "neutral"}>
                           {d.status === "active" ? "Active" : "Inactive"}
                         </Badge>
-                        {d.smsTemplate && <Badge variant="brand">SMS</Badge>}
+                        {(d.smsTemplateNew || d.smsTemplateOld) && (
+                          <Badge variant="brand">SMS</Badge>
+                        )}
                       </div>
                       <p className="text-[12px] text-slate-500">
                         {d.specialty || "No specialty"}

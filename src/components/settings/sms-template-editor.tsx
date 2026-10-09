@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Banner, Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Field, Select, Textarea } from "@/components/ui/form";
 import {
-  DEFAULT_SMS_TEMPLATE,
+  DEFAULT_NEW_PATIENT_SMS_TEMPLATE,
+  DEFAULT_OLD_PATIENT_SMS_TEMPLATE,
   SMS_VARIABLES,
   renderSmsTemplate,
   sampleSmsInput,
@@ -17,7 +18,24 @@ import {
 export interface TemplateDoctor {
   id: string;
   name: string;
-  smsTemplate: string | null;
+  smsTemplateNew: string | null;
+  smsTemplateOld: string | null;
+}
+
+function templateFor(
+  doctor: TemplateDoctor | undefined,
+  patientType: "new" | "old",
+): string {
+  const template =
+    patientType === "new"
+      ? doctor?.smsTemplateNew
+      : doctor?.smsTemplateOld;
+  return (
+    template?.trim() ||
+    (patientType === "new"
+      ? DEFAULT_NEW_PATIENT_SMS_TEMPLATE
+      : DEFAULT_OLD_PATIENT_SMS_TEMPLATE)
+  );
 }
 
 /**
@@ -26,9 +44,10 @@ export interface TemplateDoctor {
  */
 export function SmsTemplateEditor({ doctors }: { doctors: TemplateDoctor[] }) {
   const [doctorId, setDoctorId] = useState(doctors[0]?.id ?? "");
+  const [patientType, setPatientType] = useState<"new" | "old">("new");
   const current = doctors.find((d) => d.id === doctorId);
-  const [template, setTemplate] = useState(
-    current?.smsTemplate || DEFAULT_SMS_TEMPLATE,
+  const [template, setTemplate] = useState(() =>
+    templateFor(current, "new"),
   );
   const [copyStatus, setCopyStatus] = useState<{
     variable: string;
@@ -48,7 +67,12 @@ export function SmsTemplateEditor({ doctors }: { doctors: TemplateDoctor[] }) {
   function selectDoctor(id: string) {
     setDoctorId(id);
     const doc = doctors.find((d) => d.id === id);
-    setTemplate(doc?.smsTemplate || DEFAULT_SMS_TEMPLATE);
+    setTemplate(templateFor(doc, patientType));
+  }
+
+  function selectPatientType(type: "new" | "old") {
+    setPatientType(type);
+    setTemplate(templateFor(current, type));
   }
 
   async function copyVariable(name: string) {
@@ -82,24 +106,64 @@ export function SmsTemplateEditor({ doctors }: { doctors: TemplateDoctor[] }) {
           {doctors.map((d) => (
             <option key={d.id} value={d.id}>
               {d.name}
-              {d.smsTemplate ? "" : " (default template)"}
+              {(patientType === "new"
+                ? d.smsTemplateNew
+                : d.smsTemplateOld)
+                ? ""
+                : " (default template)"}
             </option>
           ))}
         </Select>
       </Field>
 
+      <div>
+        <p className="mb-1.5 text-[14px] font-medium text-slate-800">
+          Patient type
+        </p>
+        <div
+          role="radiogroup"
+          aria-label="Patient type"
+          className="grid grid-cols-2 gap-1 rounded-xl border border-slate-200 bg-slate-100 p-1"
+        >
+          {(
+            [
+              ["new", "New patient"],
+              ["old", "Old patient"],
+            ] as const
+          ).map(([type, label]) => (
+            <button
+              key={type}
+              type="button"
+              role="radio"
+              aria-checked={patientType === type}
+              onClick={() => selectPatientType(type)}
+              className={`min-h-11 rounded-lg px-3 text-[14px] font-medium transition-colors ${
+                patientType === type
+                  ? type === "new"
+                    ? "bg-white text-sky-800 shadow-sm"
+                    : "bg-white text-violet-800 shadow-sm"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <form action={formAction} className="space-y-4">
         <input type="hidden" name="doctorId" value={doctorId} />
+        <input type="hidden" name="patientType" value={patientType} />
         {state.error && <Banner type="error">{state.error}</Banner>}
         {state.ok && state.message && (
           <Banner type="success">{state.message}</Banner>
         )}
 
         <Field
-          label="SMS template"
+          label={`${patientType === "new" ? "New" : "Old"} patient SMS template`}
           htmlFor="smsTemplate"
           error={state.fieldErrors?.smsTemplate}
-          hint="If left unsaved, the default template is used."
+          hint="Clear the field to use the built-in default template."
         >
           <Textarea
             id="smsTemplate"
@@ -116,17 +180,19 @@ export function SmsTemplateEditor({ doctors }: { doctors: TemplateDoctor[] }) {
           <p className="mb-1.5 text-[13px] font-medium text-slate-700">
             Variables (click to copy)
           </p>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="-mx-1 overflow-x-auto px-1 pb-1">
+            <div className="flex w-max flex-nowrap gap-1.5">
             {SMS_VARIABLES.map((v) => (
               <button
                 key={v}
                 type="button"
                 onClick={() => void copyVariable(v)}
-                className="rounded-full border border-slate-300 bg-white px-2.5 py-1 font-mono text-[11px] text-slate-600 hover:border-brand-500 hover:bg-brand-50 hover:text-brand-700"
+                className="min-h-10 shrink-0 rounded-full border border-slate-200 bg-white px-3 font-mono text-[11px] text-slate-600 transition-colors hover:border-brand-500 hover:bg-brand-50 hover:text-brand-700"
               >
                 {`{{${v}}}`}
               </button>
             ))}
+            </div>
           </div>
           {copyStatus && (
             <p
@@ -149,7 +215,7 @@ export function SmsTemplateEditor({ doctors }: { doctors: TemplateDoctor[] }) {
         <Card>
           <CardHeader title="Sample preview" subtitle="Shown with fictional sample data" />
           <CardBody>
-            <pre className="whitespace-pre-wrap rounded-lg bg-slate-50 p-3 text-[13px] leading-relaxed text-slate-700">
+            <pre className="whitespace-pre-wrap rounded-lg border border-slate-100 bg-slate-50 p-3 text-[13px] leading-relaxed text-slate-700">
               {preview}
             </pre>
           </CardBody>

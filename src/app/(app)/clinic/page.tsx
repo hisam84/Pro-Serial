@@ -97,7 +97,7 @@ export default async function ClinicDashboard() {
       <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
         <StatCard label="New today" value={toDigits(counts.activeNew)} accent="sky" />
         <StatCard label="Old today" value={toDigits(counts.activeOld)} accent="violet" />
-        <StatCard label="Reference" value={toDigits(counts.activeReference)} accent="amber" />
+        <StatCard label="Reference" value={toDigits(counts.activeReference)} accent="rose" />
         <StatCard label="Cancelled" value={toDigits(counts.cancelled)} accent="red" />
       </div>
 

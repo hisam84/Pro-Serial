@@ -108,6 +108,8 @@ export const doctors = pgTable(
     instructions: text("instructions").notNull().default(""),
     /** Doctor-specific SMS template; null → built-in default template. */
     smsTemplate: text("sms_template"),
+    smsTemplateNew: text("sms_template_new"),
+    smsTemplateOld: text("sms_template_old"),
     status: doctorStatusEnum("status").notNull().default("active"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()

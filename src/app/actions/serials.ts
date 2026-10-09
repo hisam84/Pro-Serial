@@ -51,7 +51,10 @@ async function requireSerialsUser(): Promise<{
 /** Renders the doctor-specific SMS for an appointment row. */
 function buildSmsPayloadFrom(
   row: SerialRow,
-  smsTemplate: string | null,
+  doctorTemplates: {
+    smsTemplateNew: string | null;
+    smsTemplateOld: string | null;
+  },
   clinicName: string,
 ): SmsPayload {
   const input = buildSmsInput({
@@ -66,7 +69,10 @@ function buildSmsPayloadFrom(
     referenceDetails: row.referenceDetails,
     isReference: row.isReference,
   });
-  const message = renderSmsTemplate(effectiveSmsTemplate({ smsTemplate }), input);
+  const message = renderSmsTemplate(
+    effectiveSmsTemplate(doctorTemplates, row.patientType),
+    input,
+  );
   const mobile = normalizeMobile(row.patientMobileDisplay);
   return {
     patientName: row.patientName,
@@ -92,7 +98,10 @@ export async function getSmsPayloadFor(
   row: SerialRow,
 ): Promise<SmsPayload> {
   const [doctor] = await db
-    .select({ smsTemplate: doctors.smsTemplate })
+    .select({
+      smsTemplateNew: doctors.smsTemplateNew,
+      smsTemplateOld: doctors.smsTemplateOld,
+    })
     .from(doctors)
     .where(eq(doctors.id, row.doctorId))
     .limit(1);
@@ -103,7 +112,10 @@ export async function getSmsPayloadFor(
     .limit(1);
   return buildSmsPayloadFrom(
     row,
-    doctor?.smsTemplate ?? null,
+    {
+      smsTemplateNew: doctor?.smsTemplateNew ?? null,
+      smsTemplateOld: doctor?.smsTemplateOld ?? null,
+    },
     clinic?.name ?? "",
   );
 }

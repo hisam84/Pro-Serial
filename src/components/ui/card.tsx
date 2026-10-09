@@ -70,7 +70,8 @@ const BADGE_STYLES: Record<string, string> = {
   cancelled: "bg-red-50 text-red-700 border-red-200",
   new: "bg-sky-50 text-sky-700 border-sky-200",
   old: "bg-violet-50 text-violet-700 border-violet-200",
-  reference: "bg-amber-50 text-amber-700 border-amber-200",
+  reference: "bg-rose-50 text-rose-700 border-rose-200",
+  pending: "bg-amber-50 text-amber-700 border-amber-200",
   neutral: "bg-slate-50 text-slate-600 border-slate-200",
   brand: "bg-brand-50 text-brand-700 border-brand-200",
 };
@@ -169,7 +170,7 @@ export function StatCard({
 }: {
   label: string;
   value: React.ReactNode;
-  accent?: "brand" | "sky" | "violet" | "amber" | "red" | "slate";
+  accent?: "brand" | "sky" | "violet" | "amber" | "rose" | "red" | "slate";
   hint?: string;
 }) {
   const accents = {
@@ -177,6 +178,7 @@ export function StatCard({
     sky: "border-l-sky-500",
     violet: "border-l-violet-500",
     amber: "border-l-amber-500",
+    rose: "border-l-rose-400",
     red: "border-l-red-500",
     slate: "border-l-slate-400",
   }[accent];

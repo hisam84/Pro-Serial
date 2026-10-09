@@ -62,13 +62,13 @@ export function SerialCard({
       className={cn(
         "print-card rounded-xl border bg-white p-3.5 shadow-sm",
         cancelled ? "border-red-100 bg-red-50/40" : "border-slate-200",
-        row.isReference && !cancelled && "border-amber-200 bg-amber-50/40",
+        row.isReference && !cancelled && "border-rose-200 bg-rose-50/40",
       )}
     >
       <div className="flex items-start gap-3">
         {/* Serial badge / reference label */}
         {row.isReference ? (
-          <span className="flex h-11 shrink-0 items-center rounded-lg border border-amber-300 bg-amber-100 px-2.5 text-[12px] font-semibold text-amber-800">
+          <span className="flex h-11 shrink-0 items-center rounded-lg border border-rose-300 bg-rose-100 px-2.5 text-[12px] font-semibold text-rose-800">
             References
           </span>
         ) : (
@@ -77,7 +77,9 @@ export function SerialCard({
               "flex h-11 min-w-11 shrink-0 items-center justify-center rounded-lg px-2 text-xl font-bold",
               cancelled
                 ? "bg-red-100 text-red-400 line-through"
-                : "bg-brand-700 text-white",
+                : row.patientType === "new"
+                  ? "bg-sky-100 text-sky-800"
+                  : "bg-violet-100 text-violet-800",
             )}
             aria-label={`Serial number ${row.serialNumber ?? ""}`}
           >
@@ -114,7 +116,7 @@ export function SerialCard({
           </p>
 
           {row.isReference && row.referenceDetails && (
-            <p className="mt-1 inline-flex rounded-md border border-amber-200 bg-amber-50 px-2 py-0.5 text-[12px] text-amber-800">
+            <p className="mt-1 inline-flex rounded-md border border-rose-200 bg-rose-50 px-2 py-0.5 text-[12px] text-rose-800">
               Reference: {row.referenceDetails}
             </p>
           )}

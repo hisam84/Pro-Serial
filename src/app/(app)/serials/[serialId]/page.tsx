@@ -61,7 +61,10 @@ export default async function SerialDetailPage({ params }: PageProps) {
     .where(eq(clinics.id, user.clinicId))
     .limit(1);
   const [doctor] = await db
-    .select({ smsTemplate: doctorsTable.smsTemplate })
+    .select({
+      smsTemplateNew: doctorsTable.smsTemplateNew,
+      smsTemplateOld: doctorsTable.smsTemplateOld,
+    })
     .from(doctorsTable)
     .where(eq(doctorsTable.id, row.doctorId))
     .limit(1);
@@ -79,7 +82,13 @@ export default async function SerialDetailPage({ params }: PageProps) {
     isReference: row.isReference,
   });
   const message = renderSmsTemplate(
-    effectiveSmsTemplate({ smsTemplate: doctor?.smsTemplate ?? null }),
+    effectiveSmsTemplate(
+      {
+        smsTemplateNew: doctor?.smsTemplateNew ?? null,
+        smsTemplateOld: doctor?.smsTemplateOld ?? null,
+      },
+      row.patientType,
+    ),
     input,
   );
   const mobile = normalizeMobile(row.patientMobileDisplay);

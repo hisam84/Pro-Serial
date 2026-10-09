@@ -2,14 +2,37 @@ import { describe, expect, it } from "vitest";
 import {
   buildSmsInput,
   buildSmsLink,
+  DEFAULT_NEW_PATIENT_SMS_TEMPLATE,
+  DEFAULT_OLD_PATIENT_SMS_TEMPLATE,
   DEFAULT_SMS_TEMPLATE,
   REFERENCE_SERIAL_LABEL,
   renderSmsTemplate,
   sampleSmsInput,
   unknownVariables,
 } from "@/lib/sms";
+import { effectiveSmsTemplate } from "@/lib/doctors";
 
 describe("SMS template rendering", () => {
+  it("selects the template for the patient's type and uses that type's default", () => {
+    const templates = {
+      smsTemplateNew: "New: {{patient_name}}",
+      smsTemplateOld: "Returning: {{patient_name}}",
+    };
+
+    expect(effectiveSmsTemplate(templates, "new")).toBe(
+      "New: {{patient_name}}",
+    );
+    expect(effectiveSmsTemplate(templates, "old")).toBe(
+      "Returning: {{patient_name}}",
+    );
+    expect(effectiveSmsTemplate({}, "new")).toBe(
+      DEFAULT_NEW_PATIENT_SMS_TEMPLATE,
+    );
+    expect(effectiveSmsTemplate({}, "old")).toBe(
+      DEFAULT_OLD_PATIENT_SMS_TEMPLATE,
+    );
+  });
+
   it("renders all supported variables", () => {
     const input = sampleSmsInput();
     const template = [

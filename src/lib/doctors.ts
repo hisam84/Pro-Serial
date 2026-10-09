@@ -6,7 +6,10 @@ import type { Db } from "@/db";
 import { doctorAttendants, doctors, type Doctor } from "@/db/schema";
 import { writeAudit } from "@/lib/audit";
 import type { SessionUser } from "@/lib/auth";
-import { DEFAULT_SMS_TEMPLATE } from "@/lib/sms";
+import {
+  DEFAULT_NEW_PATIENT_SMS_TEMPLATE,
+  DEFAULT_OLD_PATIENT_SMS_TEMPLATE,
+} from "@/lib/sms";
 import type { DoctorInput } from "@/lib/validation";
 import type { ServiceResult } from "@/lib/serials";
 
@@ -95,7 +98,8 @@ export async function createDoctor(
         specialty: input.specialty.trim(),
         phone: input.phone.trim(),
         instructions: input.instructions.trim(),
-        smsTemplate: input.smsTemplate?.trim() || null,
+        smsTemplateNew: input.smsTemplateNew?.trim() || null,
+        smsTemplateOld: input.smsTemplateOld?.trim() || null,
         status: input.status,
       })
       .returning();
@@ -134,7 +138,8 @@ export async function updateDoctor(
         specialty: input.specialty.trim(),
         phone: input.phone.trim(),
         instructions: input.instructions.trim(),
-        smsTemplate: input.smsTemplate?.trim() || null,
+        smsTemplateNew: input.smsTemplateNew?.trim() || null,
+        smsTemplateOld: input.smsTemplateOld?.trim() || null,
         status: input.status,
         updatedAt: new Date(),
       })
@@ -156,11 +161,19 @@ export async function updateDoctor(
   }
 }
 
-/** Effective SMS template for a doctor (custom or built-in default). */
+/** Effective SMS template for a doctor and patient type. */
 export function effectiveSmsTemplate(doctor: {
-  smsTemplate: string | null;
-}): string {
-  return doctor.smsTemplate?.trim() || DEFAULT_SMS_TEMPLATE;
+  smsTemplateNew?: string | null;
+  smsTemplateOld?: string | null;
+}, patientType: "new" | "old" = "new"): string {
+  const template =
+    patientType === "new" ? doctor.smsTemplateNew : doctor.smsTemplateOld;
+  return (
+    template?.trim() ||
+    (patientType === "new"
+      ? DEFAULT_NEW_PATIENT_SMS_TEMPLATE
+      : DEFAULT_OLD_PATIENT_SMS_TEMPLATE)
+  );
 }
 
 export async function saveSmsTemplate(
@@ -168,6 +181,7 @@ export async function saveSmsTemplate(
   actor: SessionUser,
   doctorId: string,
   template: string,
+  patientType: "new" | "old",
 ): Promise<ServiceResult<Doctor>> {
   if (actor.role !== "clinic_admin" || !actor.clinicId) {
     return fail("You do not have permission.");
@@ -176,9 +190,17 @@ export async function saveSmsTemplate(
   if (!existing) return fail("Doctor not found.");
 
   const value = template.trim() || null;
+  const column =
+    patientType === "new" ? "smsTemplateNew" : "smsTemplateOld";
+  const previousValue =
+    patientType === "new" ? existing.smsTemplateNew : existing.smsTemplateOld;
   const [updated] = await db
     .update(doctors)
-    .set({ smsTemplate: value, updatedAt: new Date() })
+    .set(
+      patientType === "new"
+        ? { smsTemplateNew: value, updatedAt: new Date() }
+        : { smsTemplateOld: value, updatedAt: new Date() },
+    )
     .where(eq(doctors.id, doctorId))
     .returning();
 
@@ -187,8 +209,8 @@ export async function saveSmsTemplate(
     entityType: "doctor",
     entityId: doctorId,
     action: "save_sms_template",
-    before: { sms_template: existing.smsTemplate },
-    after: { sms_template: value },
+    before: { [column]: previousValue },
+    after: { [column]: value, patient_type: patientType },
   });
   return ok(updated);
 }

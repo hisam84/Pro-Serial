@@ -172,7 +172,8 @@ describe("tenant isolation & authorization", () => {
       specialty: "",
       phone: "",
       instructions: "",
-      smsTemplate: null,
+      smsTemplateNew: null,
+      smsTemplateOld: null,
       status: "inactive",
     });
     expect(denied.ok).toBe(false);
@@ -182,7 +183,8 @@ describe("tenant isolation & authorization", () => {
       specialty: "",
       phone: "",
       instructions: "",
-      smsTemplate: null,
+      smsTemplateNew: null,
+      smsTemplateOld: null,
       status: "active",
     });
     expect(deniedCreate.ok).toBe(false);
