@@ -284,7 +284,7 @@ describe("serial allocation rules", () => {
     const third = await make("01711111203");
 
     const denied = await moveSerialNumber(f.db, {
-      actor: f.attendant,
+      actor: f.superAdmin,
       appointmentId: second.data!.appointment.id,
       direction: "up",
     });
@@ -306,7 +306,7 @@ describe("serial allocation rules", () => {
     expect(afterUp.find((row) => row.id === second.data!.appointment.id)?.serialNumber).toBe(3);
 
     const movedDown = await moveSerialNumber(f.db, {
-      actor: f.clinicAdmin,
+      actor: f.attendant,
       appointmentId: third.data!.appointment.id,
       direction: "down",
     });

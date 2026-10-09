@@ -7,6 +7,7 @@ import { requireUser, toActor } from "@/lib/auth";
 import { canUseSerials, canManageClinicSettings } from "@/lib/rbac";
 import {
   listDoctorsForActor,
+  matchesPatientSearch,
   listSerials,
   summarizeCounts,
   type SerialRow,
@@ -73,19 +74,8 @@ export default async function SerialsPage({ searchParams }: PageProps) {
   });
   const counts = summarizeCounts(rows);
 
-  const queryLower = query.toLocaleLowerCase();
-  const queryDigits = query.replace(/\D/g, "");
   const searchedRows = query
-    ? rows.filter((row) => {
-        const nameMatches = row.patientName
-          .toLocaleLowerCase()
-          .includes(queryLower);
-        const mobileMatches =
-          row.patientMobileDisplay.includes(query) ||
-          (queryDigits.length > 0 &&
-            row.patientMobile.replace(/\D/g, "").includes(queryDigits));
-        return nameMatches || mobileMatches;
-      })
+    ? rows.filter((row) => matchesPatientSearch(row, query))
     : rows;
 
   const queueRows = rows.filter((r) => {
@@ -187,6 +177,7 @@ export default async function SerialsPage({ searchParams }: PageProps) {
 
       {/* Filters */}
       <SerialFilters
+        key={`${date}:${doctorId}:${query}:${tab}`}
         date={date}
         doctorId={doctorId}
         query={query}
@@ -261,6 +252,9 @@ export default async function SerialsPage({ searchParams }: PageProps) {
                   row={toClientRow(row)}
                   canEdit
                   canChangeNumber={user.role === "clinic_admin"}
+                  canReorder={
+                    user.role === "clinic_admin" || user.role === "attendant"
+                  }
                   canMoveUp={queueIndex > 0}
                   canMoveDown={
                     queueIndex >= 0 && queueIndex < activeQueue.length - 1

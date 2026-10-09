@@ -31,6 +31,7 @@ export function SerialCard({
   row,
   canEdit,
   canChangeNumber,
+  canReorder = false,
   canMoveUp = false,
   canMoveDown = false,
   sms,
@@ -38,6 +39,7 @@ export function SerialCard({
   row: SerialClientRow;
   canEdit: boolean;
   canChangeNumber: boolean;
+  canReorder?: boolean;
   canMoveUp?: boolean;
   canMoveDown?: boolean;
   /** Prebuilt SMS payload (server-rendered with the doctor's template). */
@@ -83,7 +85,7 @@ export function SerialCard({
       <div className="flex items-start gap-3">
         {/* Serial badge */}
         <div className="flex shrink-0 items-center gap-1.5">
-          {canChangeNumber && !row.isReference && !cancelled && (
+          {canReorder && !row.isReference && !cancelled && (
             <form action={moveFormAction} className="flex flex-col">
               <input type="hidden" name="appointmentId" value={row.id} />
               <button
@@ -93,7 +95,7 @@ export function SerialCard({
                 disabled={!canMoveUp || movePending}
                 aria-label="Move serial up"
                 title="Move serial up"
-                className="flex size-7 items-center justify-center rounded-md text-slate-500 hover:bg-brand-50 hover:text-brand-700 disabled:cursor-not-allowed disabled:opacity-30"
+                className="flex size-9 items-center justify-center rounded-md text-slate-500 hover:bg-brand-50 hover:text-brand-700 disabled:cursor-not-allowed disabled:opacity-30"
               >
                 <ArrowUpIcon size={16} />
               </button>
@@ -104,7 +106,7 @@ export function SerialCard({
                 disabled={!canMoveDown || movePending}
                 aria-label="Move serial down"
                 title="Move serial down"
-                className="flex size-7 items-center justify-center rounded-md text-slate-500 hover:bg-brand-50 hover:text-brand-700 disabled:cursor-not-allowed disabled:opacity-30"
+                className="flex size-9 items-center justify-center rounded-md text-slate-500 hover:bg-brand-50 hover:text-brand-700 disabled:cursor-not-allowed disabled:opacity-30"
               >
                 <ArrowDownIcon size={16} />
               </button>

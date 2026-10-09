@@ -344,6 +344,25 @@ export interface SerialRow {
   cancelledByName: string | null;
 }
 
+export function matchesPatientSearch(
+  row: Pick<SerialRow, "patientName" | "patientMobile" | "patientMobileDisplay">,
+  query: string,
+): boolean {
+  const normalizedQuery = query.trim().toLocaleLowerCase();
+  if (!normalizedQuery) return true;
+
+  const englishDigits = normalizedQuery.replace(/[০-৯]/g, (digit) =>
+    String("০১২৩৪৫৬৭৮৯".indexOf(digit)),
+  );
+  const queryDigits = englishDigits.replace(/\D/g, "");
+  return (
+    row.patientName.toLocaleLowerCase().includes(normalizedQuery) ||
+    row.patientMobileDisplay.toLocaleLowerCase().includes(normalizedQuery) ||
+    (queryDigits.length > 0 &&
+      row.patientMobile.replace(/\D/g, "").includes(queryDigits))
+  );
+}
+
 const serialSelect = {
   id: appointments.id,
   appointmentDate: appointments.appointmentDate,
@@ -679,8 +698,11 @@ export async function moveSerialNumber(
     direction: "up" | "down";
   },
 ): Promise<ServiceResult<SerialRow>> {
-  if (!isClinicAdmin(params.actor)) {
-    return fail("Only clinic admins can change serial order.");
+  if (
+    !isClinicAdmin(params.actor) &&
+    params.actor.role !== "attendant"
+  ) {
+    return fail("You do not have permission to change serial order.");
   }
   const existing = await getSerialForActor(db, params.actor, params.appointmentId);
   if (!existing) return fail("Serial not found or you do not have permission.");

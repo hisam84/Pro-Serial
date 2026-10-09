@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useTransition } from "react";
+import { useCallback, useEffect, useState, useTransition } from "react";
 import { cn } from "@/lib/utils";
 import { CalendarIcon, SearchIcon, StethoscopeIcon } from "@/components/ui/icons";
 import type { DoctorOption } from "./serial-form";
@@ -25,6 +25,7 @@ export function SerialFilters({
   const router = useRouter();
   const searchParams = useSearchParams();
   const [pending, startTransition] = useTransition();
+  const [searchText, setSearchText] = useState(query);
 
   const update = useCallback(
     (patch: Record<string, string>) => {
@@ -39,6 +40,16 @@ export function SerialFilters({
     },
     [router, searchParams],
   );
+
+  useEffect(() => {
+    const normalizedQuery = searchText.trim();
+    if (normalizedQuery === query) return;
+
+    const timeout = window.setTimeout(() => {
+      update({ q: normalizedQuery });
+    }, 200);
+    return () => window.clearTimeout(timeout);
+  }, [query, searchText, update]);
 
   return (
     <div className={cn("space-y-3", pending && "opacity-70")}>
@@ -94,15 +105,7 @@ export function SerialFilters({
         )}
       </div>
 
-      <form
-        role="search"
-        onSubmit={(event) => {
-          event.preventDefault();
-          const formData = new FormData(event.currentTarget);
-          update({ q: String(formData.get("q") ?? "").trim() });
-        }}
-        className="flex gap-2"
-      >
+      <div role="search">
         <label className="relative min-w-0 flex-1">
           <span className="sr-only">Search patient name or mobile number</span>
           <SearchIcon
@@ -112,18 +115,13 @@ export function SerialFilters({
           <input
             type="search"
             name="q"
-            defaultValue={query}
+            value={searchText}
+            onChange={(event) => setSearchText(event.target.value)}
             placeholder="Patient name or mobile number"
             className="h-11 w-full rounded-lg border border-slate-300 bg-white pl-10 pr-3 text-[15px] text-slate-800 outline-none placeholder:text-slate-400 focus:border-brand-600 focus:ring-2 focus:ring-brand-600/25"
           />
         </label>
-        <button
-          type="submit"
-          className="min-h-11 shrink-0 rounded-lg bg-brand-700 px-4 text-[14px] font-medium text-white hover:bg-brand-800"
-        >
-          Search
-        </button>
-      </form>
+      </div>
 
       {/* Category tabs */}
       <div
