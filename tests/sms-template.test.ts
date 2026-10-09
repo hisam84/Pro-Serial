@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildSmsInput,
   buildSmsLink,
+  buildWhatsAppLink,
   DEFAULT_NEW_PATIENT_SMS_TEMPLATE,
   DEFAULT_OLD_PATIENT_SMS_TEMPLATE,
   DEFAULT_SMS_TEMPLATE,
@@ -150,5 +151,16 @@ describe("SMS template rendering", () => {
     const link = buildSmsLink("+8801712345678", "Serial: 1\nThank you");
     expect(link.startsWith("sms:+8801712345678?&body=")).toBe(true);
     expect(link).toContain(encodeURIComponent("Serial: 1\nThank you"));
+  });
+
+  it("opens WhatsApp with the template message and normalized phone digits", () => {
+    const message = "Serial: ২\nশুক্রবার, ৯ অক্টোবর";
+    expect(buildWhatsAppLink("+880 1712-345678", message)).toBe(
+      `https://wa.me/8801712345678?text=${encodeURIComponent(message)}`,
+    );
+  });
+
+  it("does not build a WhatsApp link for invalid mobile numbers", () => {
+    expect(buildWhatsAppLink("123", "Hello")).toBeNull();
   });
 });

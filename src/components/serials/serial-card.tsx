@@ -18,11 +18,12 @@ import {
   MessageIcon,
   PencilIcon,
   PhoneIcon,
+  WhatsAppIcon,
   XCircleIcon,
 } from "@/components/ui/icons";
 import { SmsModal, smsSerialLabel } from "./sms-modal";
 import { formatDateCompact, toDigits, cn } from "@/lib/utils";
-import { patientTypeLabel } from "@/lib/sms";
+import { buildWhatsAppLink, patientTypeLabel } from "@/lib/sms";
 
 /**
  * One serial/reference row: large serial badge, patient info, and compact
@@ -75,6 +76,7 @@ export function SerialCard({
   }, [moveState, router]);
 
   const cancelled = row.status === "cancelled";
+  const whatsappLink = buildWhatsAppLink(sms.dial, sms.message);
 
   return (
     <li
@@ -205,6 +207,17 @@ export function SerialCard({
             <div className="grid grid-cols-2 gap-2 border-t border-slate-100 pt-3">
               {!cancelled && (
                 <>
+                  {whatsappLink && (
+                    <a
+                      href={whatsappLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex min-h-11 items-center justify-center gap-2 rounded-lg border border-emerald-200 text-[13px] font-medium text-emerald-700 hover:bg-emerald-50"
+                    >
+                      <WhatsAppIcon size={17} />
+                      WhatsApp
+                    </a>
+                  )}
                   <button
                     type="button"
                     onClick={() => setSmsOpen(true)}

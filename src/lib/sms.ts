@@ -185,3 +185,13 @@ export function sampleSmsInput(): SmsRenderInput {
 export function buildSmsLink(dialNumber: string, message: string): string {
   return `sms:${dialNumber}?&body=${encodeURIComponent(message)}`;
 }
+
+/** Opens WhatsApp with a prefilled message; the user confirms sending there. */
+export function buildWhatsAppLink(
+  dialNumber: string,
+  message: string,
+): string | null {
+  const digits = dialNumber.replace(/\D/g, "");
+  if (digits.length < 7 || digits.length > 15) return null;
+  return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`;
+}

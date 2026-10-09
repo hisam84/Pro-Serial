@@ -16,7 +16,7 @@ Everything is enforced server-side with role-based access control and a full aud
 | --- | --- |
 | Serials | Server-generated, per **clinic + doctor + date + patient type** (new/old) sequences; live search by patient name/mobile and authorized staff up/down queue reordering. Cancelled numbers are **never reused**. Concurrency-safe allocation via a counter table (`INSERT … ON CONFLICT DO UPDATE … RETURNING`). |
 | References | Separate **Reference** section above numbered serials, never consume serial numbers. |
-| SMS | Separate per-doctor templates for new and old patients, with variables and sample preview. Appointment dates include the weekday; `{{appointment_date_bangla}}` and `{{serial_number_bangla}}` provide Bengali values. Messages open in the phone's native SMS app (`sms:` link). The app **never claims an SMS was sent**, has no gateway integration, and offers copy-to-clipboard fallback. |
+| Messaging | Separate per-doctor templates for new and old patients, with variables and sample preview. Appointment dates include the weekday; `{{appointment_date_bangla}}` and `{{serial_number_bangla}}` provide Bengali values. The same rendered template can be opened in SMS or WhatsApp; the user sends it from that app. No gateway integration. |
 | PWA | Installable from supported browsers with app icons and standalone display. Patient and clinic data are not cached for offline access. |
 | Reports | 6 print-friendly reports (date-wise, new patient, old patient, doctor-wise, cancellation, daily summary) with date/doctor/type/status filters. **No CSV export** (spec). |
 | RBAC | `super_admin` (clinic operations only — never patient data), `clinic_admin` (own clinic), `attendant` (assigned doctors only). Doctor login is deferred but the schema is ready. |
