@@ -66,10 +66,14 @@ export function SerialCard({
       )}
     >
       <div className="flex items-start gap-3">
-        {/* Serial badge / reference label */}
+        {/* Serial badge */}
         {row.isReference ? (
-          <span className="flex h-11 shrink-0 items-center rounded-lg border border-rose-300 bg-rose-100 px-2.5 text-[12px] font-semibold text-rose-800">
-            References
+          <span
+            className="flex h-11 min-w-11 shrink-0 items-center justify-center rounded-lg border border-rose-300 bg-rose-100 px-2 text-[13px] font-bold text-rose-800"
+            aria-label="Reference entry"
+            title="Reference"
+          >
+            Ref
           </span>
         ) : (
           <span
