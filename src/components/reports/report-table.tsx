@@ -32,7 +32,7 @@ export function ReportTable({
                 : r.status === "completed"
                   ? "border-emerald-100 bg-emerald-50/30"
                 : r.isReference
-                  ? "border-rose-200 bg-rose-50/40"
+                  ? "border-emerald-200 bg-emerald-50/40"
                   : "border-slate-200 bg-white"
             }`}
           >
@@ -46,7 +46,7 @@ export function ReportTable({
                   {r.patientAddress ? ` · ${r.patientAddress}` : ""}
                 </p>
                 {r.isReference && r.referenceDetails && (
-                  <p className="mt-0.5 text-[12px] text-rose-700">
+                  <p className="mt-0.5 text-[12px] text-emerald-700">
                     Reference: {r.referenceDetails}
                   </p>
                 )}
@@ -146,7 +146,7 @@ export function SummaryGrid({
   const items: [string, number, string][] = [
     ["New patient", summary.activeNew, "text-sky-700"],
     ["Old patient", summary.activeOld, "text-violet-700"],
-    ["Reference", summary.activeReference, "text-rose-700"],
+    ["Reference", summary.activeReference, "text-emerald-700"],
     ["Active serials", summary.activeTotal, "text-brand-700"],
     ["Cancelled", summary.cancelled, "text-red-600"],
     ["Completed", summary.completed, "text-emerald-700"],

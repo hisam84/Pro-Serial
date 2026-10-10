@@ -176,7 +176,7 @@ export default async function SerialsPage({ searchParams }: PageProps) {
       <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-5">
         <StatCard label="New patient" value={toDigits(counts.activeNew)} accent="sky" />
         <StatCard label="Old patient" value={toDigits(counts.activeOld)} accent="violet" />
-        <StatCard label="Reference" value={toDigits(counts.activeReference)} accent="rose" />
+        <StatCard label="Reference" value={toDigits(counts.activeReference)} accent="emerald" />
         <StatCard label="Cancelled" value={toDigits(counts.cancelled)} accent="red" />
         <StatCard label="Completed" value={toDigits(counts.completed)} accent="brand" />
       </div>
@@ -195,7 +195,7 @@ export default async function SerialsPage({ searchParams }: PageProps) {
       {/* Reference entries — always at the top, without serial numbers */}
       {references.length > 0 && (
         <section aria-label="Reference">
-          <h2 className="mb-2 text-[13px] font-semibold uppercase tracking-wide text-rose-700">
+          <h2 className="mb-2 text-[13px] font-semibold uppercase tracking-wide text-emerald-700">
             References ({toDigits(references.length)})
           </h2>
           <ul className="space-y-2">

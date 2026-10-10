@@ -90,7 +90,7 @@ export function SerialCard({
           : completed
             ? "border-emerald-100 bg-emerald-50/30"
             : "border-slate-200",
-        row.isReference && !inactive && "border-rose-200 bg-rose-50/40",
+        row.isReference && !inactive && "border-emerald-200 bg-emerald-50/40",
       )}
     >
       <div className="flex min-h-12 items-center gap-2.5">
@@ -125,7 +125,7 @@ export function SerialCard({
           )}
           {row.isReference ? (
             <span
-              className="flex h-11 min-w-11 shrink-0 items-center justify-center rounded-lg border border-rose-300 bg-rose-100 px-2 text-[13px] font-bold text-rose-800"
+              className="flex h-11 min-w-11 shrink-0 items-center justify-center rounded-lg border border-emerald-300 bg-emerald-100 px-2 text-[13px] font-bold text-emerald-800"
               aria-label="Reference entry"
               title="Reference"
             >
@@ -200,7 +200,7 @@ export function SerialCard({
             {row.patientAddress && <p>{row.patientAddress}</p>}
             <p>{formatDateCompact(row.appointmentDate)}</p>
             {row.isReference && row.referenceDetails && (
-              <p className="inline-flex rounded-md border border-rose-200 bg-rose-50 px-2 py-0.5 text-[12px] text-rose-800">
+              <p className="inline-flex rounded-md border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[12px] text-emerald-800">
                 Reference: {row.referenceDetails}
               </p>
             )}
