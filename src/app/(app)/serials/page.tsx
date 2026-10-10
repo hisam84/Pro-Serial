@@ -85,8 +85,13 @@ export default async function SerialsPage({ searchParams }: PageProps) {
   });
   const searchedIds = new Set(searchedRows.map((row) => row.id));
   const visible = queueRows.filter((row) => searchedIds.has(row.id));
-  const references = visible.filter((r) => r.isReference);
-  const regular = visible.filter((r) => !r.isReference);
+  const references = visible.filter(
+    (row) => row.isReference && row.status !== "cancelled",
+  );
+  const regular = visible.filter(
+    (row) => !row.isReference && row.status !== "cancelled",
+  );
+  const cancelled = visible.filter((row) => row.status === "cancelled");
 
   // Doctor templates (for SMS payloads) — loaded once per doctor.
   const doctorIds = [...new Set(rows.map((r) => r.doctorId))];
@@ -214,24 +219,27 @@ export default async function SerialsPage({ searchParams }: PageProps) {
             Serials ({toDigits(regular.length)})
           </h2>
         )}
-        {regular.length === 0 && references.length === 0 ? (
-          <EmptyState
-            title={query ? "No patients found" : "No serials on this date"}
-            description={
-              query
-                ? "Try another patient name or mobile number."
-                : "Add a patient serial from the “New serial” button above."
-            }
-            action={
-              <Link
-                href={`/serials/new?doctorId=${encodeURIComponent(doctorId)}&date=${encodeURIComponent(date)}`}
-                className={buttonClass("primary", "md")}
-              >
-                <PlusIcon size={18} />
-                New serial
-              </Link>
-            }
-          />
+        {regular.length === 0 ? (
+          references.length === 0 &&
+          cancelled.length === 0 && (
+            <EmptyState
+              title={query ? "No patients found" : "No serials on this date"}
+              description={
+                query
+                  ? "Try another patient name or mobile number."
+                  : "Add a patient serial from the “New serial” button above."
+              }
+              action={
+                <Link
+                  href={`/serials/new?doctorId=${encodeURIComponent(doctorId)}&date=${encodeURIComponent(date)}`}
+                  className={buttonClass("primary", "md")}
+                >
+                  <PlusIcon size={18} />
+                  New serial
+                </Link>
+              }
+            />
+          )
         ) : (
           <ul className="space-y-2">
             {regular.map((row) => {
@@ -267,6 +275,25 @@ export default async function SerialsPage({ searchParams }: PageProps) {
           </ul>
         )}
       </section>
+
+      {cancelled.length > 0 && (
+        <section aria-label="Cancelled serials">
+          <h2 className="mb-2 text-[13px] font-semibold uppercase tracking-wide text-red-600">
+            Cancelled ({toDigits(cancelled.length)})
+          </h2>
+          <ul className="space-y-2">
+            {cancelled.map((row) => (
+              <SerialCard
+                key={row.id}
+                row={toClientRow(row)}
+                canEdit
+                canChangeNumber={false}
+                sms={smsFor(row)}
+              />
+            ))}
+          </ul>
+        </section>
+      )}
 
       {canManageSettings && doctors.length === 0 && (
         <p className="rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-2.5 text-[13px] text-amber-800">
