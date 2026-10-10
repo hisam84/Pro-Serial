@@ -11,6 +11,7 @@ import { canUseSerials } from "@/lib/rbac";
 import {
   cancelSerialEntry,
   changeSerialNumber,
+  completeSerialEntry,
   createSerialEntry,
   findPatientsByMobile,
   moveSerialNumber,
@@ -23,6 +24,7 @@ import { normalizeMobile } from "@/lib/mobile";
 import {
   serialCancelSchema,
   serialChangeNumberSchema,
+  serialCompleteSchema,
   serialCreateSchema,
   serialMoveSchema,
   serialUpdateSchema,
@@ -289,6 +291,30 @@ export async function cancelSerialAction(
     return { error: result.error ?? "Cancellation failed." };
   }
   return { ok: true, message: "Serial cancelled." };
+}
+
+/* ── Complete ─────────────────────────────────────────────────────── */
+
+export async function completeSerialAction(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const { db, user } = await requireSerialsUser();
+  const parsed = serialCompleteSchema.safeParse({
+    appointmentId: formData.get("appointmentId"),
+  });
+  if (!parsed.success) {
+    return { error: "Please provide valid information." };
+  }
+
+  const result = await completeSerialEntry(db, {
+    actor: toActor(user),
+    appointmentId: parsed.data.appointmentId,
+  });
+  if (!result.ok) {
+    return { error: result.error ?? "Could not mark the serial complete." };
+  }
+  return { ok: true, message: "Visit marked complete." };
 }
 
 /* ── Manual serial change ──────────────────────────────────────────── */

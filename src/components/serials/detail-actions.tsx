@@ -14,8 +14,9 @@ import { ConfirmDialog } from "@/components/ui/dialog";
 import { Field, Input } from "@/components/ui/form";
 import { MessageIcon, XCircleIcon } from "@/components/ui/icons";
 import { SmsModal } from "./sms-modal";
+import { CompleteSerialButton } from "./complete-serial-button";
 
-/** SMS + Cancel actions on the detail page. */
+/** Complete, SMS, and cancel actions on the detail page. */
 export function DetailActions({
   row,
   sms,
@@ -43,18 +44,27 @@ export function DetailActions({
     if (state.ok) router.refresh();
   }, [state, router]);
 
-  if (row.status === "cancelled") {
+  if (row.status !== "active") {
     return (
-      <Banner type="info">This serial has been cancelled — its details are kept in history.</Banner>
+      <Banner type="info">
+        {row.status === "completed"
+          ? "This visit is marked complete and kept in history."
+          : "This serial has been cancelled — its details are kept in history."}
+      </Banner>
     );
   }
 
   return (
-    <div className="flex gap-2">
+    <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+      <CompleteSerialButton
+        appointmentId={row.id}
+        patientName={row.patientName}
+        className="w-full"
+      />
       <button
         type="button"
         onClick={() => setSmsOpen(true)}
-        className={buttonClass("primary", "md", "flex-1")}
+        className={buttonClass("primary", "md", "w-full")}
       >
         <MessageIcon size={17} />
         Send SMS
@@ -62,7 +72,7 @@ export function DetailActions({
       <button
         type="button"
         onClick={() => setCancelOpen(true)}
-        className={buttonClass("danger", "md", "flex-1")}
+        className={buttonClass("danger", "md", "w-full")}
       >
         <XCircleIcon size={17} />
         Cancel serial

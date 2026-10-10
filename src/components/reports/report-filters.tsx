@@ -140,6 +140,7 @@ export function ReportFilters({
           >
             <option value="">All statuses</option>
             <option value="active">Active only</option>
+            <option value="completed">Completed only</option>
             <option value="cancelled">Cancelled only</option>
           </select>
         )}

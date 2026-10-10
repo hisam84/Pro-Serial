@@ -22,6 +22,7 @@ import {
   XCircleIcon,
 } from "@/components/ui/icons";
 import { SmsModal, smsSerialLabel } from "./sms-modal";
+import { CompleteSerialButton } from "./complete-serial-button";
 import { formatDateCompact, toDigits, cn } from "@/lib/utils";
 import { buildWhatsAppLink, patientTypeLabel } from "@/lib/sms";
 
@@ -76,20 +77,26 @@ export function SerialCard({
   }, [moveState, router]);
 
   const cancelled = row.status === "cancelled";
+  const completed = row.status === "completed";
+  const inactive = cancelled || completed;
   const whatsappLink = buildWhatsAppLink(sms.dial, sms.message);
 
   return (
     <li
       className={cn(
         "print-card rounded-xl border bg-white p-1.5 shadow-sm",
-        cancelled ? "border-red-100 bg-red-50/40" : "border-slate-200",
-        row.isReference && !cancelled && "border-rose-200 bg-rose-50/40",
+        cancelled
+          ? "border-red-100 bg-red-50/40"
+          : completed
+            ? "border-emerald-100 bg-emerald-50/30"
+            : "border-slate-200",
+        row.isReference && !inactive && "border-rose-200 bg-rose-50/40",
       )}
     >
       <div className="flex min-h-12 items-center gap-2.5">
         {/* Serial badge */}
         <div className="flex shrink-0 items-center gap-1.5">
-          {canReorder && !row.isReference && !cancelled && (
+          {canReorder && !row.isReference && !inactive && (
             <form action={moveFormAction} className="flex flex-col">
               <input type="hidden" name="appointmentId" value={row.id} />
               <button
@@ -130,7 +137,9 @@ export function SerialCard({
                 "flex h-11 min-w-11 shrink-0 items-center justify-center rounded-lg px-2 text-xl font-bold",
                 cancelled
                   ? "bg-red-100 text-red-400 line-through"
-                  : row.patientType === "new"
+                : completed
+                  ? "bg-emerald-100 text-emerald-800"
+                : row.patientType === "new"
                     ? "bg-sky-100 text-sky-800"
                     : "bg-violet-100 text-violet-800",
               )}
@@ -154,6 +163,14 @@ export function SerialCard({
           >
             {patientTypeLabel(row.patientType)}
           </Badge>
+          {inactive && (
+            <Badge
+              variant={completed ? "completed" : "cancelled"}
+              className="shrink-0"
+            >
+              {completed ? "Done" : "Cancelled"}
+            </Badge>
+          )}
         </div>
 
         <button
@@ -195,6 +212,7 @@ export function SerialCard({
                 {row.cancelReason ? ` · ${row.cancelReason}` : ""}
               </p>
             )}
+            {completed && <p className="text-emerald-700">Visit completed</p>}
           </div>
 
           {moveState.error && (
@@ -205,8 +223,13 @@ export function SerialCard({
 
           {canEdit && (
             <div className="grid grid-cols-2 gap-2 border-t border-slate-100 pt-3">
-              {!cancelled && (
+              {!inactive && (
                 <>
+                  <CompleteSerialButton
+                    appointmentId={row.id}
+                    patientName={row.patientName}
+                    className="col-span-2"
+                  />
                   {whatsappLink && (
                     <a
                       href={whatsappLink}
@@ -243,7 +266,7 @@ export function SerialCard({
                   </button>
                 </>
               )}
-              {canChangeNumber && !row.isReference && !cancelled && (
+              {canChangeNumber && !row.isReference && !inactive && (
                 <Link
                   href={`/serials/${row.id}`}
                   className="flex min-h-11 items-center justify-center rounded-lg border border-slate-200 text-[13px] font-medium text-slate-700 hover:bg-slate-50"
@@ -251,7 +274,7 @@ export function SerialCard({
                   Change number
                 </Link>
               )}
-              {cancelled && (
+              {inactive && (
                 <Link
                   href={`/serials/${row.id}`}
                   className="flex min-h-11 items-center justify-center rounded-lg border border-slate-200 text-[13px] font-medium text-slate-700 hover:bg-slate-50"

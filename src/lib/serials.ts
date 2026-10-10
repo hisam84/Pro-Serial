@@ -317,7 +317,7 @@ export interface SerialListFilters {
   to?: string;
   doctorId?: string;
   patientType?: PatientType | "";
-  status?: "active" | "cancelled" | "";
+  status?: "active" | "cancelled" | "completed" | "";
   includeReferences?: boolean;
 }
 
@@ -328,7 +328,7 @@ export interface SerialRow {
   serialNumber: number | null;
   isReference: boolean;
   referenceDetails: string | null;
-  status: "active" | "cancelled";
+  status: "active" | "cancelled" | "completed";
   notes: string;
   createdAt: Date;
   updatedAt: Date;
@@ -490,6 +490,9 @@ export async function updateSerialEntry(
 ): Promise<ServiceResult<SerialRow>> {
   const existing = await getSerialForActor(db, params.actor, params.appointmentId);
   if (!existing) return fail("Serial not found or you do not have permission.");
+  if (existing.status !== "active") {
+    return fail("Only active serials can be edited.");
+  }
 
   const mobile = normalizeMobile(params.patientMobile);
   if (!mobile.ok) {
@@ -511,7 +514,7 @@ export async function updateSerialEntry(
         })
         .where(eq(patients.id, existing.patientId));
 
-      await tx
+      const updatedRows = await tx
         .update(appointments)
         .set({
           notes: params.notes.trim(),
@@ -521,7 +524,14 @@ export async function updateSerialEntry(
           updatedBy: params.actor.id,
           updatedAt: new Date(),
         })
-        .where(eq(appointments.id, params.appointmentId));
+        .where(
+          and(
+            eq(appointments.id, params.appointmentId),
+            eq(appointments.status, "active"),
+          ),
+        )
+        .returning({ id: appointments.id });
+      if (updatedRows.length === 0) throw new SerialNoLongerActiveError();
 
       await writeAudit(tx, {
         actor: params.actor,
@@ -541,6 +551,9 @@ export async function updateSerialEntry(
       });
     });
   } catch (e) {
+    if (e instanceof SerialNoLongerActiveError) {
+      return fail("This serial is no longer active.");
+    }
     console.error("updateSerialEntry failed:", e);
     return fail("Could not update the serial.");
   }
@@ -562,10 +575,14 @@ export async function cancelSerialEntry(
   const existing = await getSerialForActor(db, params.actor, params.appointmentId);
   if (!existing) return fail("Serial not found or you do not have permission.");
   if (existing.status === "cancelled") return fail("This serial is already cancelled.");
+  if (existing.status === "completed") {
+    return fail("A completed visit cannot be cancelled.");
+  }
 
+  let cancelled = false;
   try {
     await db.transaction(async (tx) => {
-      await tx
+      const updatedRows = await tx
         .update(appointments)
         .set({
           status: "cancelled",
@@ -575,7 +592,15 @@ export async function cancelSerialEntry(
           updatedBy: params.actor.id,
           updatedAt: new Date(),
         })
-        .where(eq(appointments.id, params.appointmentId));
+        .where(
+          and(
+            eq(appointments.id, params.appointmentId),
+            eq(appointments.status, "active"),
+          ),
+        )
+        .returning({ id: appointments.id });
+      if (updatedRows.length === 0) return;
+      cancelled = true;
 
       await writeAudit(tx, {
         actor: params.actor,
@@ -591,8 +616,63 @@ export async function cancelSerialEntry(
     return fail("Could not cancel the serial.");
   }
 
+  if (!cancelled) return fail("This serial is no longer active.");
   const updated = await getSerialForActor(db, params.actor, params.appointmentId);
   return updated ? ok(updated) : fail("Could not cancel the serial.");
+}
+
+/* ── Complete ─────────────────────────────────────────────────────── */
+
+export async function completeSerialEntry(
+  db: Db,
+  params: {
+    actor: AuditActor;
+    appointmentId: string;
+  },
+): Promise<ServiceResult<SerialRow>> {
+  const existing = await getSerialForActor(db, params.actor, params.appointmentId);
+  if (!existing) return fail("Serial not found or you do not have permission.");
+  if (existing.status !== "active") {
+    return fail("Only active serials can be marked complete.");
+  }
+
+  let completed = false;
+  try {
+    await db.transaction(async (tx) => {
+      const updatedRows = await tx
+        .update(appointments)
+        .set({
+          status: "completed",
+          updatedBy: params.actor.id,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(appointments.id, params.appointmentId),
+            eq(appointments.status, "active"),
+          ),
+        )
+        .returning({ id: appointments.id });
+
+      if (updatedRows.length === 0) return;
+      completed = true;
+      await writeAudit(tx, {
+        actor: params.actor,
+        entityType: "appointment",
+        entityId: params.appointmentId,
+        action: "complete_serial",
+        before: { status: "active", serial_number: existing.serialNumber },
+        after: { status: "completed" },
+      });
+    });
+  } catch (e) {
+    console.error("completeSerialEntry failed:", e);
+    return fail("Could not mark the serial complete.");
+  }
+
+  if (!completed) return fail("This serial is no longer active.");
+  const updated = await getSerialForActor(db, params.actor, params.appointmentId);
+  return updated ? ok(updated) : fail("Could not mark the serial complete.");
 }
 
 /* ── Manual serial number change ───────────────────────────────────── */
@@ -612,6 +692,9 @@ export async function changeSerialNumber(
   }
   if (existing.status === "cancelled") {
     return fail("A cancelled serial number cannot be changed.");
+  }
+  if (existing.status === "completed") {
+    return fail("A completed serial number cannot be changed.");
   }
   if (existing.serialNumber === params.serialNumber) {
     return fail("The new serial number is the same as the current one.");
@@ -656,14 +739,21 @@ export async function changeSerialNumber(
         throw new DuplicateSerialError();
       }
 
-      await tx
+      const updatedRows = await tx
         .update(appointments)
         .set({
           serialNumber: params.serialNumber,
           updatedBy: params.actor.id,
           updatedAt: new Date(),
         })
-        .where(eq(appointments.id, params.appointmentId));
+        .where(
+          and(
+            eq(appointments.id, params.appointmentId),
+            eq(appointments.status, "active"),
+          ),
+        )
+        .returning({ id: appointments.id });
+      if (updatedRows.length === 0) throw new SerialNoLongerActiveError();
 
       await writeAudit(tx, {
         actor: params.actor,
@@ -680,6 +770,9 @@ export async function changeSerialNumber(
         `Number ${params.serialNumber} is already in use — choose another.`,
         { serialNumber: "This number is already in use." },
       );
+    }
+    if (e instanceof SerialNoLongerActiveError) {
+      return fail("This serial is no longer active.");
     }
     console.error("changeSerialNumber failed:", e);
     return fail("Could not change the serial number.");
@@ -711,6 +804,9 @@ export async function moveSerialNumber(
   }
   if (existing.status === "cancelled") {
     return fail("A cancelled serial number cannot be moved.");
+  }
+  if (existing.status === "completed") {
+    return fail("A completed serial number cannot be moved.");
   }
 
   const scope: SerialScope = {
@@ -844,6 +940,13 @@ class DuplicateSerialError extends Error {
   }
 }
 
+class SerialNoLongerActiveError extends Error {
+  constructor() {
+    super("serial is no longer active");
+    this.name = "SerialNoLongerActiveError";
+  }
+}
+
 /* ── Counts (for the serial screen chips) ──────────────────────────── */
 
 export interface SerialCounts {
@@ -851,6 +954,7 @@ export interface SerialCounts {
   activeOld: number;
   activeReference: number;
   cancelled: number;
+  completed: number;
   activeTotal: number;
 }
 
@@ -860,11 +964,16 @@ export function summarizeCounts(rows: SerialRow[]): SerialCounts {
     activeOld: 0,
     activeReference: 0,
     cancelled: 0,
+    completed: 0,
     activeTotal: 0,
   };
   for (const r of rows) {
     if (r.status === "cancelled") {
       counts.cancelled += 1;
+      continue;
+    }
+    if (r.status === "completed") {
+      counts.completed += 1;
       continue;
     }
     if (r.isReference) counts.activeReference += 1;

@@ -67,6 +67,7 @@ export function CardHeader({
 
 const BADGE_STYLES: Record<string, string> = {
   active: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  completed: "bg-emerald-50 text-emerald-700 border-emerald-200",
   cancelled: "bg-red-50 text-red-700 border-red-200",
   new: "bg-sky-50 text-sky-700 border-sky-200",
   old: "bg-violet-50 text-violet-700 border-violet-200",

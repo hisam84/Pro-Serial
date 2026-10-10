@@ -64,7 +64,7 @@ export default async function ReportsPage({ searchParams }: PageProps) {
   const to = first(sp.to) || (report === "cancellation" || report === "summary" ? from : date);
   const doctorId = first(sp.doctorId);
   const patientType = first(sp.patientType) as "" | "new" | "old";
-  const status = first(sp.status) as "" | "active" | "cancelled";
+  const status = first(sp.status) as "" | "active" | "cancelled" | "completed";
 
   const doctors = await listDoctorsForActor(db, toActor(user));
   const filters = {

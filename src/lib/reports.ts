@@ -22,7 +22,7 @@ export interface ReportFilters {
   to?: string;
   doctorId?: string;
   patientType?: PatientType | "";
-  status?: "active" | "cancelled" | "";
+  status?: "active" | "cancelled" | "completed" | "";
 }
 
 export interface DoctorSummaryRow {
@@ -33,7 +33,10 @@ export interface DoctorSummaryRow {
 
 function baseFilters(
   filters: ReportFilters,
-  extra: { patientType?: PatientType | ""; status?: "active" | "cancelled" | "" } = {},
+  extra: {
+    patientType?: PatientType | "";
+    status?: "active" | "cancelled" | "completed" | "";
+  } = {},
 ) {
   return {
     date: filters.date,
@@ -87,6 +90,7 @@ export async function doctorWiseReport(
           activeOld: 0,
           activeReference: 0,
           cancelled: 0,
+          completed: 0,
           activeTotal: 0,
         },
       };

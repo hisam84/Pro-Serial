@@ -44,6 +44,7 @@ export const patientTypeEnum = pgEnum("patient_type", ["new", "old"]);
 export const appointmentStatusEnum = pgEnum("appointment_status", [
   "active",
   "cancelled",
+  "completed",
 ]);
 
 /* ── Tables ────────────────────────────────────────────────────────── */

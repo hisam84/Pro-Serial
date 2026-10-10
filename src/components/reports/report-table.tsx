@@ -29,6 +29,8 @@ export function ReportTable({
             className={`rounded-xl border p-3 ${
               r.status === "cancelled"
                 ? "border-red-100 bg-red-50/40"
+                : r.status === "completed"
+                  ? "border-emerald-100 bg-emerald-50/30"
                 : r.isReference
                   ? "border-rose-200 bg-rose-50/40"
                   : "border-slate-200 bg-white"
@@ -73,6 +75,7 @@ export function ReportTable({
               {formatDateCompact(r.appointmentDate)}
               {r.status === "cancelled" &&
                 ` · Cancelled${r.cancelledByName ? ` (${r.cancelledByName})` : ""}`}
+              {r.status === "completed" && " · Completed"}
             </p>
           </li>
         ))}
@@ -112,7 +115,11 @@ export function ReportTable({
               {showDoctor && <td className="py-1.5 pr-2">{r.doctorName}</td>}
               <td className="py-1.5 pr-2">{formatDateCompact(r.appointmentDate)}</td>
               <td className="py-1.5 pr-2">
-                {r.status === "cancelled" ? "Cancelled" : "Active"}
+                {r.status === "cancelled"
+                  ? "Cancelled"
+                  : r.status === "completed"
+                    ? "Completed"
+                    : "Active"}
               </td>
             </tr>
           ))}
@@ -131,6 +138,7 @@ export function SummaryGrid({
     activeOld: number;
     activeReference: number;
     cancelled: number;
+    completed: number;
     activeTotal: number;
     totalEntries: number;
   };
@@ -141,6 +149,7 @@ export function SummaryGrid({
     ["Reference", summary.activeReference, "text-rose-700"],
     ["Active serials", summary.activeTotal, "text-brand-700"],
     ["Cancelled", summary.cancelled, "text-red-600"],
+    ["Completed", summary.completed, "text-emerald-700"],
     ["Total entries", summary.totalEntries, "text-slate-800"],
   ];
   return (
@@ -170,6 +179,7 @@ export function DoctorSummaryTable({
       activeOld: number;
       activeReference: number;
       cancelled: number;
+      completed: number;
       activeTotal: number;
     };
   }[];
@@ -184,6 +194,7 @@ export function DoctorSummaryTable({
             <th className="px-3 py-2 font-semibold text-slate-600">Old</th>
             <th className="px-3 py-2 font-semibold text-slate-600">References</th>
             <th className="px-3 py-2 font-semibold text-slate-600">Cancelled</th>
+            <th className="px-3 py-2 font-semibold text-slate-600">Completed</th>
             <th className="px-3 py-2 font-semibold text-slate-600">Active total</th>
           </tr>
         </thead>
@@ -200,6 +211,9 @@ export function DoctorSummaryTable({
               </td>
               <td className="px-3 py-2 text-red-600">
                 {toDigits(d.counts.cancelled)}
+              </td>
+              <td className="px-3 py-2 text-emerald-700">
+                {toDigits(d.counts.completed)}
               </td>
               <td className="px-3 py-2 font-semibold">
                 {toDigits(d.counts.activeTotal)}

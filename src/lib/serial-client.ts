@@ -12,7 +12,7 @@ export interface SerialClientRow {
   serialNumber: number | null;
   isReference: boolean;
   referenceDetails: string | null;
-  status: "active" | "cancelled";
+  status: "active" | "cancelled" | "completed";
   notes: string;
   createdAt: string;
   updatedAt: string;

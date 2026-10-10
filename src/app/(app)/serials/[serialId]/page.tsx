@@ -133,8 +133,20 @@ export default async function SerialDetailPage({ params }: PageProps) {
           <Badge variant={row.patientType === "new" ? "new" : "old"}>
             {patientTypeLabel(row.patientType)}
           </Badge>
-          <Badge variant={row.status === "active" ? "active" : "cancelled"}>
-            {row.status === "active" ? "Active" : "Cancelled"}
+          <Badge
+            variant={
+              row.status === "active"
+                ? "active"
+                : row.status === "completed"
+                  ? "completed"
+                  : "cancelled"
+            }
+          >
+            {row.status === "active"
+              ? "Active"
+              : row.status === "completed"
+                ? "Completed"
+                : "Cancelled"}
           </Badge>
         </div>
       </div>

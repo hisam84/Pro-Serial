@@ -4,9 +4,11 @@ import { appointments } from "@/db/schema";
 import {
   cancelSerialEntry,
   changeSerialNumber,
+  completeSerialEntry,
   createSerialEntry,
   listSerials,
   moveSerialNumber,
+  summarizeCounts,
   updateSerialEntry,
 } from "@/lib/serials";
 import { buildFixture, serialParams } from "./helpers";
@@ -387,6 +389,91 @@ describe("serial allocation rules", () => {
     const actions = audit.map((a) => a.action);
     expect(actions).toContain("create_serial");
     expect(actions).toContain("cancel_serial");
+  });
+
+  it("marks a visit complete, updates counts, and keeps the audit record", async () => {
+    const f = await buildFixture();
+    const created = await createSerialEntry(
+      f.db,
+      serialParams({ actor: f.attendant, doctorId: f.doctorId }),
+    );
+    const appointmentId = created.data!.appointment.id;
+
+    const result = await completeSerialEntry(f.db, {
+      actor: f.attendant,
+      appointmentId,
+    });
+    expect(result.ok).toBe(true);
+    expect(result.data?.status).toBe("completed");
+    expect(
+      summarizeCounts(
+        await listSerials(f.db, f.clinicAdmin, {
+          date: "2026-10-09",
+          doctorId: f.doctorId,
+        }),
+      ),
+    ).toMatchObject({ activeNew: 0, completed: 1, activeTotal: 0 });
+
+    const repeated = await completeSerialEntry(f.db, {
+      actor: f.attendant,
+      appointmentId,
+    });
+    expect(repeated.ok).toBe(false);
+    expect(
+      (
+        await cancelSerialEntry(f.db, {
+          actor: f.attendant,
+          appointmentId,
+          reason: "",
+        })
+      ).ok,
+    ).toBe(false);
+    expect(
+      (
+        await moveSerialNumber(f.db, {
+          actor: f.attendant,
+          appointmentId,
+          direction: "down",
+        })
+      ).ok,
+    ).toBe(false);
+    expect(
+      (
+        await updateSerialEntry(f.db, {
+          actor: f.attendant,
+          appointmentId,
+          patientName: "Edited patient",
+          patientMobile: "01711111102",
+          patientAddress: "",
+          referenceDetails: "",
+          notes: "",
+        })
+      ).ok,
+    ).toBe(false);
+
+    const { listAuditForEntity } = await import("@/lib/audit");
+    const audit = await listAuditForEntity(f.db, "appointment", appointmentId);
+    expect(audit.map((entry) => entry.action)).toContain("complete_serial");
+  });
+
+  it("does not complete a cancelled serial", async () => {
+    const f = await buildFixture();
+    const created = await createSerialEntry(
+      f.db,
+      serialParams({ actor: f.attendant, doctorId: f.doctorId }),
+    );
+    const appointmentId = created.data!.appointment.id;
+    await cancelSerialEntry(f.db, {
+      actor: f.attendant,
+      appointmentId,
+      reason: "",
+    });
+
+    const result = await completeSerialEntry(f.db, {
+      actor: f.attendant,
+      appointmentId,
+    });
+    expect(result.ok).toBe(false);
   });
 
   it("db constraint prevents duplicate serial numbers even under raw inserts", async () => {
