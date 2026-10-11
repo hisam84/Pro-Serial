@@ -175,12 +175,17 @@ export default async function SerialsPage({ searchParams }: PageProps) {
       </div>
 
       {/* Counts */}
-      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
         <StatCard label="New patient" value={toDigits(counts.activeNew)} accent="sky" />
         <StatCard label="Old patient" value={toDigits(counts.activeOld)} accent="violet" />
         <StatCard label="Reference" value={toDigits(counts.activeReference)} accent="emerald" />
         <StatCard label="Cancelled" value={toDigits(counts.cancelled)} accent="red" />
         <StatCard label="Completed" value={toDigits(counts.completed)} accent="brand" />
+        <StatCard
+          label="Total patient"
+          value={toDigits(rows.length - counts.cancelled)}
+          accent="slate"
+        />
       </div>
 
       {/* Filters */}
