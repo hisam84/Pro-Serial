@@ -24,6 +24,7 @@ export function ReportFilters({
   doctors,
   patientType,
   status,
+  reportSubmission,
 }: {
   report: string;
   date: string;
@@ -33,6 +34,7 @@ export function ReportFilters({
   doctors: DoctorOption[];
   patientType: string;
   status: string;
+  reportSubmission: string;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -121,6 +123,16 @@ export function ReportFilters({
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
+        <select
+          value={reportSubmission}
+          onChange={(e) => update({ reportSubmission: e.target.value })}
+          aria-label="Filter by lab report submission"
+          className="h-10 rounded-lg border border-slate-300 bg-white px-2.5 text-[14px] outline-none focus:border-brand-600"
+        >
+          <option value="">All report statuses</option>
+          <option value="not_submitted">Report not submitted</option>
+          <option value="submitted">Report submitted</option>
+        </select>
         {report === "datewise" && (
           <select
             value={patientType}

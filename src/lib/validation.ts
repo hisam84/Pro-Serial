@@ -160,6 +160,11 @@ export const serialCompleteSchema = z.object({
   appointmentId: uuidSchema,
 });
 
+export const serialReportSubmissionSchema = z.object({
+  appointmentId: uuidSchema,
+  submitted: z.enum(["true", "false"]),
+});
+
 export const serialChangeNumberSchema = z.object({
   appointmentId: uuidSchema,
   serialNumber: z.coerce
@@ -193,6 +198,7 @@ export const reportFilterSchema = z.object({
   doctorId: z.string().regex(uuidRegex).optional().or(z.literal("")),
   patientType: z.enum(["new", "old", ""]).default(""),
   status: z.enum(["active", "cancelled", "completed", ""]).default(""),
+  reportSubmission: z.enum(["submitted", "not_submitted", ""]).default(""),
 });
 
 export function parseOr<T>(schema: { safeParse: (v: unknown) => { success: boolean; data?: T; error?: unknown } }, value: unknown, fallback: T): T {

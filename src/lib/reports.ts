@@ -23,6 +23,7 @@ export interface ReportFilters {
   doctorId?: string;
   patientType?: PatientType | "";
   status?: "active" | "cancelled" | "completed" | "";
+  reportSubmission?: "submitted" | "not_submitted" | "";
 }
 
 export interface DoctorSummaryRow {
@@ -36,6 +37,7 @@ function baseFilters(
   extra: {
     patientType?: PatientType | "";
     status?: "active" | "cancelled" | "completed" | "";
+    reportSubmission?: "submitted" | "not_submitted" | "";
   } = {},
 ) {
   return {
@@ -45,6 +47,7 @@ function baseFilters(
     doctorId: filters.doctorId || undefined,
     patientType: extra.patientType ?? filters.patientType ?? "",
     status: extra.status ?? filters.status ?? "",
+    reportSubmission: filters.reportSubmission ?? "",
   };
 }
 

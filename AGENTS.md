@@ -39,8 +39,11 @@ reusable business rules belong in `src/lib/`.
 - Reference entries have no serial number and never consume one. Keep their green visual treatment
   consistent across serial cards, badges, reports, and summary accents.
 - Appointment statuses are `active`, `cancelled`, and `completed`. Cancelled and completed entries
-  remain in history; their serial numbers are never reused. Cancelled serials appear after the
-  other entries on the serial list.
+  remain in history; their serial numbers are never reused. On the serial list show active entries
+  first, completed entries next, and cancelled entries last.
+- Lab-report submission status is separate from visit status. Active and completed entries may be
+  marked submitted or not submitted; cancelled entries cannot be changed. Keep the submitted flag,
+  timestamp, actor, and audit event synchronized.
 - Only active entries can be edited, cancelled, completed, have their serial number changed, or be
   reordered. Enforce this in the business layer as well as hiding unavailable UI controls.
 - Every sensitive mutation should write an audit record in the same database transaction.

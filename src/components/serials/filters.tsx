@@ -13,6 +13,7 @@ export function SerialFilters({
   query,
   doctors,
   tab,
+  reportSubmission,
   counts,
 }: {
   date: string;
@@ -20,6 +21,7 @@ export function SerialFilters({
   query: string;
   doctors: DoctorOption[];
   tab: "all" | "new" | "old";
+  reportSubmission: "" | "submitted" | "not_submitted";
   counts: { activeNew: number; activeOld: number; activeReference: number; cancelled: number };
 }) {
   const router = useRouter();
@@ -122,6 +124,19 @@ export function SerialFilters({
           />
         </label>
       </div>
+
+      <label className="block">
+        <span className="sr-only">Filter by report submission status</span>
+        <select
+          value={reportSubmission}
+          onChange={(event) => update({ reportSubmission: event.target.value })}
+          className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-[14px] text-slate-700 outline-none focus:border-brand-600 sm:w-auto"
+        >
+          <option value="">All report statuses</option>
+          <option value="not_submitted">Report not submitted</option>
+          <option value="submitted">Report submitted</option>
+        </select>
+      </label>
 
       {/* Category tabs */}
       <div

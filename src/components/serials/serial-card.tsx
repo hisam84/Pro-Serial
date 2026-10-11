@@ -23,7 +23,8 @@ import {
 } from "@/components/ui/icons";
 import { SmsModal, smsSerialLabel } from "./sms-modal";
 import { CompleteSerialButton } from "./complete-serial-button";
-import { formatDateCompact, toDigits, cn } from "@/lib/utils";
+import { ReportSubmissionButton } from "./report-submission-button";
+import { formatDateCompact, formatDateTime, toDigits, cn } from "@/lib/utils";
 import { buildWhatsAppLink, patientTypeLabel } from "@/lib/sms";
 
 /**
@@ -171,6 +172,11 @@ export function SerialCard({
               {completed ? "Done" : "Cancelled"}
             </Badge>
           )}
+          {row.reportSubmitted && (
+            <Badge variant="active" className="shrink-0">
+              Report in
+            </Badge>
+          )}
         </div>
 
         <button
@@ -213,6 +219,12 @@ export function SerialCard({
               </p>
             )}
             {completed && <p className="text-emerald-700">Visit completed</p>}
+            <p className={row.reportSubmitted ? "text-emerald-700" : "text-amber-700"}>
+              Lab report: {row.reportSubmitted ? "Submitted" : "Not submitted"}
+              {row.reportSubmittedAt
+                ? ` · ${formatDateTime(row.reportSubmittedAt)}`
+                : ""}
+            </p>
           </div>
 
           {moveState.error && (
@@ -223,6 +235,12 @@ export function SerialCard({
 
           {canEdit && (
             <div className="grid grid-cols-2 gap-2 border-t border-slate-100 pt-3">
+              {!cancelled && (
+                <ReportSubmissionButton
+                  appointmentId={row.id}
+                  submitted={row.reportSubmitted}
+                />
+              )}
               {!inactive && (
                 <>
                   <CompleteSerialButton

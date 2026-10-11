@@ -15,6 +15,7 @@ import {
   createSerialEntry,
   findPatientsByMobile,
   moveSerialNumber,
+  setReportSubmission,
   updateSerialEntry,
   type SerialRow,
 } from "@/lib/serials";
@@ -27,6 +28,7 @@ import {
   serialCompleteSchema,
   serialCreateSchema,
   serialMoveSchema,
+  serialReportSubmissionSchema,
   serialUpdateSchema,
 } from "@/lib/validation";
 import { clinics, doctors } from "@/db/schema";
@@ -192,6 +194,8 @@ export async function createSerialAction(
     isReference: result.data.appointment.isReference,
     referenceDetails: result.data.appointment.referenceDetails,
     status: result.data.appointment.status,
+    reportSubmitted: result.data.appointment.reportSubmitted,
+    reportSubmittedAt: result.data.appointment.reportSubmittedAt,
     notes: result.data.appointment.notes,
     createdAt: result.data.appointment.createdAt,
     updatedAt: result.data.appointment.updatedAt,
@@ -315,6 +319,37 @@ export async function completeSerialAction(
     return { error: result.error ?? "Could not mark the serial complete." };
   }
   return { ok: true, message: "Visit marked complete." };
+}
+
+export async function setReportSubmissionAction(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const { db, user } = await requireSerialsUser();
+  const parsed = serialReportSubmissionSchema.safeParse({
+    appointmentId: formData.get("appointmentId"),
+    submitted: formData.get("submitted"),
+  });
+  if (!parsed.success) {
+    return { error: "Please provide valid information." };
+  }
+
+  const result = await setReportSubmission(db, {
+    actor: toActor(user),
+    appointmentId: parsed.data.appointmentId,
+    submitted: parsed.data.submitted === "true",
+  });
+  if (!result.ok) {
+    return {
+      error: result.error ?? "Could not update the report submission status.",
+    };
+  }
+  return {
+    ok: true,
+    message: parsed.data.submitted === "true"
+      ? "Report marked as submitted."
+      : "Report marked as not submitted.",
+  };
 }
 
 /* ── Manual serial change ──────────────────────────────────────────── */

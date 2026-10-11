@@ -14,11 +14,11 @@ Everything is enforced server-side with role-based access control and a full aud
 
 | Area | What you get |
 | --- | --- |
-| Serials | Server-generated, per **clinic + doctor + date + patient type** (new/old) sequences; live search by patient name/mobile, authorized staff up/down queue reordering, and completion tracking after a visit. Cancelled and completed numbers remain in history and are **never reused**. Concurrency-safe allocation via a counter table (`INSERT … ON CONFLICT DO UPDATE … RETURNING`). |
+| Serials | Server-generated, per **clinic + doctor + date + patient type** (new/old) sequences; live search by patient name/mobile, authorized staff up/down queue reordering, and independent visit-completion and lab-report-submission tracking. Cancelled and completed numbers remain in history and are **never reused**. Concurrency-safe allocation via a counter table (`INSERT … ON CONFLICT DO UPDATE … RETURNING`). |
 | References | Separate **Reference** section above numbered serials, never consume serial numbers. |
 | Messaging | Separate per-doctor templates for new and old patients, with variables and sample preview. Appointment dates include the weekday; `{{appointment_date_bangla}}` and `{{serial_number_bangla}}` provide Bengali values. The same rendered template can be opened in SMS or WhatsApp; the user sends it from that app. No gateway integration. |
 | PWA | Installable from supported browsers with app icons and standalone display. Patient and clinic data are not cached for offline access. |
-| Reports | 6 print-friendly reports (date-wise, new patient, old patient, doctor-wise, cancellation, daily summary) with date/doctor/type/status filters. **No CSV export** (spec). |
+| Reports | 6 print-friendly reports (date-wise, new patient, old patient, doctor-wise, cancellation, daily summary) with date/doctor/type/visit-status/report-submission filters. **No CSV export** (spec). |
 | RBAC | `super_admin` (clinic operations only — never patient data), `clinic_admin` (own clinic), `attendant` (assigned doctors only). Doctor login is deferred but the schema is ready. |
 | Security | bcrypt passwords, DB-backed sessions with expiry + secure cookies, login rate limiting, normalized mobile numbers, IDOR-safe queries, audit log of all sensitive actions. |
 
@@ -117,6 +117,9 @@ action.
   **Reference** section above the numbered list.
 - **Cancelled serials are never reused** — the appointment keeps its number in history and the
   counter simply moves on.
+- Lab report submission is separate from visit completion. Active and completed entries can be
+  marked submitted or not submitted; cancelled entries cannot be changed. Submission timestamp
+  and actor are retained for history and audit.
 - Concurrency-safe: the allocation counter is updated with
   `INSERT … ON CONFLICT (clinic, doctor, date, type) DO UPDATE SET value = value + 1 RETURNING`
   inside the appointment transaction (tested with concurrent allocations).

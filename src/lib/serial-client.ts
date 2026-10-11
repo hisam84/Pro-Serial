@@ -13,6 +13,8 @@ export interface SerialClientRow {
   isReference: boolean;
   referenceDetails: string | null;
   status: "active" | "cancelled" | "completed";
+  reportSubmitted: boolean;
+  reportSubmittedAt: string | null;
   notes: string;
   createdAt: string;
   updatedAt: string;
@@ -47,5 +49,8 @@ export function toClientRow(row: SerialRow): SerialClientRow {
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
     cancelledAt: row.cancelledAt ? row.cancelledAt.toISOString() : null,
+    reportSubmittedAt: row.reportSubmittedAt
+      ? row.reportSubmittedAt.toISOString()
+      : null,
   };
 }

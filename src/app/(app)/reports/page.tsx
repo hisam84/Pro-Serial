@@ -65,6 +65,11 @@ export default async function ReportsPage({ searchParams }: PageProps) {
   const doctorId = first(sp.doctorId);
   const patientType = first(sp.patientType) as "" | "new" | "old";
   const status = first(sp.status) as "" | "active" | "cancelled" | "completed";
+  const reportSubmissionRaw = first(sp.reportSubmission);
+  const reportSubmission: "" | "submitted" | "not_submitted" =
+    reportSubmissionRaw === "submitted" || reportSubmissionRaw === "not_submitted"
+      ? reportSubmissionRaw
+      : "";
 
   const doctors = await listDoctorsForActor(db, toActor(user));
   const filters = {
@@ -74,6 +79,7 @@ export default async function ReportsPage({ searchParams }: PageProps) {
     doctorId: doctorId || undefined,
     patientType,
     status,
+    reportSubmission,
   };
 
   let rows: SerialRow[] = [];
@@ -133,6 +139,7 @@ export default async function ReportsPage({ searchParams }: PageProps) {
             }))}
             patientType={patientType}
             status={status}
+            reportSubmission={reportSubmission}
           />
         </CardBody>
       </Card>

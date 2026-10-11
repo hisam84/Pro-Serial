@@ -76,6 +76,9 @@ export function ReportTable({
               {r.status === "cancelled" &&
                 ` · Cancelled${r.cancelledByName ? ` (${r.cancelledByName})` : ""}`}
               {r.status === "completed" && " · Completed"}
+              {` · Lab report ${r.reportSubmitted ? "submitted" : "not submitted"}`}
+              {r.reportSubmittedAt &&
+                ` (${formatDateTime(r.reportSubmittedAt)})`}
             </p>
           </li>
         ))}
@@ -92,6 +95,7 @@ export function ReportTable({
             {showDoctor && <th className="py-1.5 pr-2 font-semibold">Doctor</th>}
             <th className="py-1.5 pr-2 font-semibold">Date</th>
             <th className="py-1.5 pr-2 font-semibold">Status</th>
+            <th className="py-1.5 pr-2 font-semibold">Lab report</th>
           </tr>
         </thead>
         <tbody>
@@ -120,6 +124,12 @@ export function ReportTable({
                   : r.status === "completed"
                     ? "Completed"
                     : "Active"}
+              </td>
+              <td className="py-1.5 pr-2">
+                {r.reportSubmitted ? "Submitted" : "Not submitted"}
+                {r.reportSubmittedAt
+                  ? ` · ${formatDateTime(r.reportSubmittedAt)}`
+                  : ""}
               </td>
             </tr>
           ))}

@@ -8,6 +8,7 @@ import { canUseSerials, canManageClinicSettings } from "@/lib/rbac";
 import {
   listDoctorsForActor,
   matchesPatientSearch,
+  groupSerialRowsForDisplay,
   listSerials,
   summarizeCounts,
   type SerialRow,
@@ -67,10 +68,16 @@ export default async function SerialsPage({ searchParams }: PageProps) {
   const tab: "all" | "new" | "old" =
     tabRaw === "new" || tabRaw === "old" ? tabRaw : "all";
   const query = first(sp.q).trim();
+  const reportSubmissionRaw = first(sp.reportSubmission);
+  const reportSubmission: "" | "submitted" | "not_submitted" =
+    reportSubmissionRaw === "submitted" || reportSubmissionRaw === "not_submitted"
+      ? reportSubmissionRaw
+      : "";
 
   const rows = await listSerials(db, toActor(user), {
     date,
     doctorId: doctorId || undefined,
+    reportSubmission,
   });
   const counts = summarizeCounts(rows);
 
@@ -85,13 +92,8 @@ export default async function SerialsPage({ searchParams }: PageProps) {
   });
   const searchedIds = new Set(searchedRows.map((row) => row.id));
   const visible = queueRows.filter((row) => searchedIds.has(row.id));
-  const references = visible.filter(
-    (row) => row.isReference && row.status !== "cancelled",
-  );
-  const regular = visible.filter(
-    (row) => !row.isReference && row.status !== "cancelled",
-  );
-  const cancelled = visible.filter((row) => row.status === "cancelled");
+  const { activeReferences, activeSerials, completed, cancelled } =
+    groupSerialRowsForDisplay(visible);
 
   // Doctor templates (for SMS payloads) — loaded once per doctor.
   const doctorIds = [...new Set(rows.map((r) => r.doctorId))];
@@ -183,23 +185,24 @@ export default async function SerialsPage({ searchParams }: PageProps) {
 
       {/* Filters */}
       <SerialFilters
-        key={`${date}:${doctorId}:${query}:${tab}`}
+        key={`${date}:${doctorId}:${query}:${tab}:${reportSubmission}`}
         date={date}
         doctorId={doctorId}
         query={query}
         doctors={doctors}
         tab={tab}
+        reportSubmission={reportSubmission}
         counts={counts}
       />
 
       {/* Reference entries — always at the top, without serial numbers */}
-      {references.length > 0 && (
+      {activeReferences.length > 0 && (
         <section aria-label="Reference">
           <h2 className="mb-2 text-[13px] font-semibold uppercase tracking-wide text-emerald-700">
-            References ({toDigits(references.length)})
+            References ({toDigits(activeReferences.length)})
           </h2>
           <ul className="space-y-2">
-            {references.map((row) => (
+            {activeReferences.map((row) => (
               <SerialCard
                 key={row.id}
                 row={toClientRow(row)}
@@ -213,36 +216,15 @@ export default async function SerialsPage({ searchParams }: PageProps) {
       )}
 
       {/* Regular serials */}
-      <section aria-label="Serials">
-        {references.length > 0 && regular.length > 0 && (
-          <h2 className="mb-2 text-[13px] font-semibold uppercase tracking-wide text-slate-500">
-            Serials ({toDigits(regular.length)})
-          </h2>
-        )}
-        {regular.length === 0 ? (
-          references.length === 0 &&
-          cancelled.length === 0 && (
-            <EmptyState
-              title={query ? "No patients found" : "No serials on this date"}
-              description={
-                query
-                  ? "Try another patient name or mobile number."
-                  : "Add a patient serial from the “New serial” button above."
-              }
-              action={
-                <Link
-                  href={`/serials/new?doctorId=${encodeURIComponent(doctorId)}&date=${encodeURIComponent(date)}`}
-                  className={buttonClass("primary", "md")}
-                >
-                  <PlusIcon size={18} />
-                  New serial
-                </Link>
-              }
-            />
-          )
-        ) : (
+      {activeSerials.length > 0 && (
+        <section aria-label="Serials">
+          {activeReferences.length > 0 && (
+            <h2 className="mb-2 text-[13px] font-semibold uppercase tracking-wide text-slate-500">
+              Serials ({toDigits(activeSerials.length)})
+            </h2>
+          )}
           <ul className="space-y-2">
-            {regular.map((row) => {
+            {activeSerials.map((row) => {
               const activeQueue = queueRows
                 .filter(
                   (item) =>
@@ -273,8 +255,27 @@ export default async function SerialsPage({ searchParams }: PageProps) {
               );
             })}
           </ul>
-        )}
-      </section>
+        </section>
+      )}
+
+      {completed.length > 0 && (
+        <section aria-label="Completed visits">
+          <h2 className="mb-2 text-[13px] font-semibold uppercase tracking-wide text-emerald-700">
+            Completed ({toDigits(completed.length)})
+          </h2>
+          <ul className="space-y-2">
+            {completed.map((row) => (
+              <SerialCard
+                key={row.id}
+                row={toClientRow(row)}
+                canEdit
+                canChangeNumber={false}
+                sms={smsFor(row)}
+              />
+            ))}
+          </ul>
+        </section>
+      )}
 
       {cancelled.length > 0 && (
         <section aria-label="Cancelled serials">
@@ -294,6 +295,29 @@ export default async function SerialsPage({ searchParams }: PageProps) {
           </ul>
         </section>
       )}
+
+      {activeReferences.length === 0 &&
+        activeSerials.length === 0 &&
+        completed.length === 0 &&
+        cancelled.length === 0 && (
+          <EmptyState
+            title={query ? "No patients found" : "No serials on this date"}
+            description={
+              query
+                ? "Try another patient name or mobile number."
+                : "Add a patient serial from the “New serial” button above."
+            }
+            action={
+              <Link
+                href={`/serials/new?doctorId=${encodeURIComponent(doctorId)}&date=${encodeURIComponent(date)}`}
+                className={buttonClass("primary", "md")}
+              >
+                <PlusIcon size={18} />
+                New serial
+              </Link>
+            }
+          />
+        )}
 
       {canManageSettings && doctors.length === 0 && (
         <p className="rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-2.5 text-[13px] text-amber-800">

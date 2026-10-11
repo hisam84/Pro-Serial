@@ -6,14 +6,44 @@ import {
   changeSerialNumber,
   completeSerialEntry,
   createSerialEntry,
+  groupSerialRowsForDisplay,
   listSerials,
   moveSerialNumber,
+  setReportSubmission,
   summarizeCounts,
   updateSerialEntry,
 } from "@/lib/serials";
 import { buildFixture, serialParams } from "./helpers";
 
 describe("serial allocation rules", () => {
+  it("groups completed serials and references after active entries and before cancelled", () => {
+    const rows = [
+      { id: "active-reference", isReference: true, status: "active" },
+      { id: "completed-serial", isReference: false, status: "completed" },
+      { id: "cancelled-reference", isReference: true, status: "cancelled" },
+      { id: "active-serial", isReference: false, status: "active" },
+      { id: "completed-reference", isReference: true, status: "completed" },
+      { id: "cancelled-serial", isReference: false, status: "cancelled" },
+    ] as const;
+
+    const groups = groupSerialRowsForDisplay([...rows]);
+    expect(
+      [
+        ...groups.activeReferences,
+        ...groups.activeSerials,
+        ...groups.completed,
+        ...groups.cancelled,
+      ].map((row) => row.id),
+    ).toEqual([
+      "active-reference",
+      "active-serial",
+      "completed-serial",
+      "completed-reference",
+      "cancelled-reference",
+      "cancelled-serial",
+    ]);
+  });
+
   it("gives separate sequences for new and old patients", async () => {
     const f = await buildFixture();
 
@@ -472,6 +502,87 @@ describe("serial allocation rules", () => {
     const result = await completeSerialEntry(f.db, {
       actor: f.attendant,
       appointmentId,
+    });
+    expect(result.ok).toBe(false);
+  });
+
+  it("tracks report submission independently from visit completion", async () => {
+    const f = await buildFixture();
+    const created = await createSerialEntry(
+      f.db,
+      serialParams({ actor: f.attendant, doctorId: f.doctorId }),
+    );
+    const appointmentId = created.data!.appointment.id;
+    await completeSerialEntry(f.db, {
+      actor: f.attendant,
+      appointmentId,
+    });
+
+    const completedRow = await listSerials(f.db, f.clinicAdmin, {
+      date: "2026-10-09",
+      doctorId: f.doctorId,
+    });
+    expect(completedRow[0]?.reportSubmitted).toBe(false);
+    expect(
+      await listSerials(f.db, f.clinicAdmin, {
+        date: "2026-10-09",
+        doctorId: f.doctorId,
+        reportSubmission: "not_submitted",
+      }),
+    ).toHaveLength(1);
+
+    const submitted = await setReportSubmission(f.db, {
+      actor: f.attendant,
+      appointmentId,
+      submitted: true,
+    });
+    expect(submitted.ok).toBe(true);
+    expect(submitted.data?.status).toBe("completed");
+    expect(submitted.data?.reportSubmitted).toBe(true);
+    expect(submitted.data?.reportSubmittedAt).toBeInstanceOf(Date);
+    expect(
+      await listSerials(f.db, f.clinicAdmin, {
+        date: "2026-10-09",
+        doctorId: f.doctorId,
+        reportSubmission: "submitted",
+      }),
+    ).toHaveLength(1);
+
+    const reverted = await setReportSubmission(f.db, {
+      actor: f.attendant,
+      appointmentId,
+      submitted: false,
+    });
+    expect(reverted.ok).toBe(true);
+    expect(reverted.data?.status).toBe("completed");
+    expect(reverted.data?.reportSubmitted).toBe(false);
+    expect(reverted.data?.reportSubmittedAt).toBeNull();
+
+    const { listAuditForEntity } = await import("@/lib/audit");
+    const audit = await listAuditForEntity(f.db, "appointment", appointmentId);
+    expect(audit.map((entry) => entry.action)).toContain("mark_report_submitted");
+    expect(audit.map((entry) => entry.action)).toContain(
+      "mark_report_not_submitted",
+    );
+  });
+
+  it("does not allow report status changes on cancelled serials", async () => {
+    const f = await buildFixture();
+    const created = await createSerialEntry(
+      f.db,
+      serialParams({ actor: f.attendant, doctorId: f.doctorId }),
+    );
+    const appointmentId = created.data!.appointment.id;
+    await cancelSerialEntry(f.db, {
+      actor: f.attendant,
+      appointmentId,
+      reason: "",
+    });
+
+    const result = await setReportSubmission(f.db, {
+      actor: f.attendant,
+      appointmentId,
+      submitted: true,
     });
     expect(result.ok).toBe(false);
   });

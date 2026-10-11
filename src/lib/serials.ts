@@ -318,6 +318,7 @@ export interface SerialListFilters {
   doctorId?: string;
   patientType?: PatientType | "";
   status?: "active" | "cancelled" | "completed" | "";
+  reportSubmission?: "submitted" | "not_submitted" | "";
   includeReferences?: boolean;
 }
 
@@ -329,6 +330,8 @@ export interface SerialRow {
   isReference: boolean;
   referenceDetails: string | null;
   status: "active" | "cancelled" | "completed";
+  reportSubmitted: boolean;
+  reportSubmittedAt: Date | null;
   notes: string;
   createdAt: Date;
   updatedAt: Date;
@@ -342,6 +345,22 @@ export interface SerialRow {
   doctorId: string;
   doctorName: string;
   cancelledByName: string | null;
+}
+
+export function groupSerialRowsForDisplay<T extends Pick<
+  SerialRow,
+  "status" | "isReference"
+>>(rows: T[]) {
+  return {
+    activeReferences: rows.filter(
+      (row) => row.isReference && row.status === "active",
+    ),
+    activeSerials: rows.filter(
+      (row) => !row.isReference && row.status === "active",
+    ),
+    completed: rows.filter((row) => row.status === "completed"),
+    cancelled: rows.filter((row) => row.status === "cancelled"),
+  };
 }
 
 export function matchesPatientSearch(
@@ -371,6 +390,8 @@ const serialSelect = {
   isReference: appointments.isReference,
   referenceDetails: appointments.referenceDetails,
   status: appointments.status,
+  reportSubmitted: appointments.reportSubmitted,
+  reportSubmittedAt: appointments.reportSubmittedAt,
   notes: appointments.notes,
   createdAt: appointments.createdAt,
   updatedAt: appointments.updatedAt,
@@ -410,6 +431,11 @@ export async function listSerials(
   if (filters.doctorId) conditions.push(eq(appointments.doctorId, filters.doctorId));
   if (filters.patientType) conditions.push(eq(appointments.patientType, filters.patientType));
   if (filters.status) conditions.push(eq(appointments.status, filters.status));
+  if (filters.reportSubmission === "submitted") {
+    conditions.push(eq(appointments.reportSubmitted, true));
+  } else if (filters.reportSubmission === "not_submitted") {
+    conditions.push(eq(appointments.reportSubmitted, false));
+  }
   if (filters.includeReferences === false) {
     conditions.push(eq(appointments.isReference, false));
   }
@@ -673,6 +699,75 @@ export async function completeSerialEntry(
   if (!completed) return fail("This serial is no longer active.");
   const updated = await getSerialForActor(db, params.actor, params.appointmentId);
   return updated ? ok(updated) : fail("Could not mark the serial complete.");
+}
+
+export async function setReportSubmission(
+  db: Db,
+  params: {
+    actor: AuditActor;
+    appointmentId: string;
+    submitted: boolean;
+  },
+): Promise<ServiceResult<SerialRow>> {
+  const existing = await getSerialForActor(db, params.actor, params.appointmentId);
+  if (!existing) return fail("Serial not found or you do not have permission.");
+  if (existing.status === "cancelled") {
+    return fail("Cancelled serials cannot have report status changed.");
+  }
+  if (existing.reportSubmitted === params.submitted) {
+    return fail(
+      params.submitted
+        ? "The report is already marked submitted."
+        : "The report is already marked not submitted.",
+    );
+  }
+
+  const submittedAt = params.submitted ? new Date() : null;
+  try {
+    await db.transaction(async (tx) => {
+      const updatedRows = await tx
+        .update(appointments)
+        .set({
+          reportSubmitted: params.submitted,
+          reportSubmittedAt: submittedAt,
+          reportSubmittedBy: params.submitted ? params.actor.id : null,
+          updatedBy: params.actor.id,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(appointments.id, params.appointmentId),
+            eq(appointments.reportSubmitted, existing.reportSubmitted),
+            inArray(appointments.status, ["active", "completed"]),
+          ),
+        )
+        .returning({ id: appointments.id });
+
+      if (updatedRows.length === 0) {
+        throw new Error("The report status changed before this update.");
+      }
+
+      await writeAudit(tx, {
+        actor: params.actor,
+        entityType: "appointment",
+        entityId: params.appointmentId,
+        action: params.submitted
+          ? "mark_report_submitted"
+          : "mark_report_not_submitted",
+        before: { report_submitted: existing.reportSubmitted },
+        after: {
+          report_submitted: params.submitted,
+          report_submitted_at: submittedAt?.toISOString() ?? null,
+        },
+      });
+    });
+  } catch (e) {
+    console.error("setReportSubmission failed:", e);
+    return fail("Could not update the report submission status.");
+  }
+
+  const updated = await getSerialForActor(db, params.actor, params.appointmentId);
+  return updated ? ok(updated) : fail("Could not update the report status.");
 }
 
 /* ── Manual serial number change ───────────────────────────────────── */

@@ -19,6 +19,7 @@ import {
   type SmsPayload,
 } from "@/lib/serial-client";
 import { EditSerialForm } from "@/components/serials/serial-form";
+import { ReportSubmissionButton } from "@/components/serials/report-submission-button";
 import {
   ChangeSerialForm,
   DetailActions,
@@ -198,6 +199,32 @@ export default async function SerialDetailPage({ params }: PageProps) {
               </div>
             )}
           </dl>
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardHeader title="Lab report submission" />
+        <CardBody className="space-y-3">
+          <div>
+            <Badge variant={row.reportSubmitted ? "active" : "pending"}>
+              {row.reportSubmitted ? "Submitted" : "Not submitted"}
+            </Badge>
+            {row.reportSubmittedAt && (
+              <p className="mt-1.5 text-[12px] text-slate-500">
+                Submitted {formatDateTime(row.reportSubmittedAt)}
+              </p>
+            )}
+          </div>
+          {row.status !== "cancelled" ? (
+            <ReportSubmissionButton
+              appointmentId={row.id}
+              submitted={row.reportSubmitted}
+            />
+          ) : (
+            <p className="text-[13px] text-slate-500">
+              Cancelled serials cannot have their report status changed.
+            </p>
+          )}
         </CardBody>
       </Card>
 

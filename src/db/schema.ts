@@ -202,6 +202,9 @@ export const appointments = pgTable(
     cancelledBy: uuid("cancelled_by").references(() => users.id),
     cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
     cancelReason: text("cancel_reason"),
+    reportSubmitted: boolean("report_submitted").notNull().default(false),
+    reportSubmittedAt: timestamp("report_submitted_at", { withTimezone: true }),
+    reportSubmittedBy: uuid("report_submitted_by").references(() => users.id),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
