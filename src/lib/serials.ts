@@ -99,6 +99,22 @@ export async function currentCounter(
   return rows[0]?.last_number ?? 0;
 }
 
+export async function getNextSerialNumberPreview(
+  db: Db,
+  actor: AuditActor,
+  scope: Omit<SerialScope, "clinicId">,
+): Promise<ServiceResult<{ nextSerialNumber: number }>> {
+  const access = await assertDoctorAccess(db, actor, scope.doctorId);
+  if (!access.ok) return fail(access.error);
+  if (!actor.clinicId) return fail("You do not have permission.");
+
+  const lastNumber = await currentCounter(db, {
+    ...scope,
+    clinicId: actor.clinicId,
+  });
+  return ok({ nextSerialNumber: lastNumber + 1 });
+}
+
 /* ── Patient identity ──────────────────────────────────────────────── */
 
 /**

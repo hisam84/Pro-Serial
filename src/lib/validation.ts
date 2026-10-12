@@ -142,6 +142,12 @@ export const serialCreateSchema = z
   });
 export type SerialCreateInput = z.infer<typeof serialCreateSchema>;
 
+export const serialNumberPreviewSchema = z.object({
+  doctorId: uuidSchema,
+  appointmentDate: isoDateSchema,
+  patientType: z.enum(["new", "old"]),
+});
+
 export const serialUpdateSchema = z.object({
   appointmentId: uuidSchema,
   patientName: z.string().trim().min(2, "Patient name is required.").max(120),
