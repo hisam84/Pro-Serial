@@ -14,7 +14,6 @@ import {
   completeSerialEntry,
   createSerialEntry,
   findPatientsByMobile,
-  getNextSerialNumberPreview,
   moveSerialNumber,
   setReportSubmission,
   updateSerialEntry,
@@ -29,7 +28,6 @@ import {
   serialCompleteSchema,
   serialCreateSchema,
   serialMoveSchema,
-  serialNumberPreviewSchema,
   serialReportSubmissionSchema,
   serialUpdateSchema,
 } from "@/lib/validation";
@@ -132,31 +130,6 @@ export async function getSmsPayloadFor(
 
 export interface CreateSerialState extends FormState {
   created?: SerialClientRow & { sms: SmsPayload };
-}
-
-export async function getNextSerialNumberPreviewAction(
-  input: {
-    doctorId: string;
-    appointmentDate: string;
-    patientType: "new" | "old";
-  },
-): Promise<{ ok: true; nextSerialNumber: number } | { ok: false; error: string }> {
-  const { db, user } = await requireSerialsUser();
-  const parsed = serialNumberPreviewSchema.safeParse(input);
-  if (!parsed.success) {
-    return { ok: false, error: "Invalid doctor, date, or patient type." };
-  }
-
-  const result = await getNextSerialNumberPreview(
-    db,
-    toActor(user),
-    parsed.data,
-  );
-  if (!result.ok || !result.data) {
-    return { ok: false, error: result.error ?? "Could not load the next serial number." };
-  }
-
-  return { ok: true, nextSerialNumber: result.data.nextSerialNumber };
 }
 
 export async function createSerialAction(

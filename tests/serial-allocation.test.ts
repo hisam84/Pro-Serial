@@ -6,7 +6,6 @@ import {
   changeSerialNumber,
   completeSerialEntry,
   createSerialEntry,
-  getNextSerialNumberPreview,
   groupSerialRowsForDisplay,
   listSerials,
   moveSerialNumber,
@@ -48,19 +47,6 @@ describe("serial allocation rules", () => {
   it("gives separate sequences for new and old patients", async () => {
     const f = await buildFixture();
 
-    const initialNew = await getNextSerialNumberPreview(f.db, f.attendant, {
-      doctorId: f.doctorId,
-      appointmentDate: "2026-10-09",
-      patientType: "new",
-    });
-    const initialOld = await getNextSerialNumberPreview(f.db, f.attendant, {
-      doctorId: f.doctorId,
-      appointmentDate: "2026-10-09",
-      patientType: "old",
-    });
-    expect(initialNew.data?.nextSerialNumber).toBe(1);
-    expect(initialOld.data?.nextSerialNumber).toBe(1);
-
     const r1 = await createSerialEntry(
       f.db,
       serialParams({
@@ -95,19 +81,6 @@ describe("serial allocation rules", () => {
     expect(r1.data?.serialNumber).toBe(1);
     expect(r2.data?.serialNumber).toBe(1); // old has its own sequence
     expect(r3.data?.serialNumber).toBe(2);
-
-    const nextNew = await getNextSerialNumberPreview(f.db, f.attendant, {
-      doctorId: f.doctorId,
-      appointmentDate: "2026-10-09",
-      patientType: "new",
-    });
-    const nextOld = await getNextSerialNumberPreview(f.db, f.attendant, {
-      doctorId: f.doctorId,
-      appointmentDate: "2026-10-09",
-      patientType: "old",
-    });
-    expect(nextNew.data?.nextSerialNumber).toBe(3);
-    expect(nextOld.data?.nextSerialNumber).toBe(2);
   });
 
   it("resets sequences per doctor and per date", async () => {

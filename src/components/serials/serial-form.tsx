@@ -1,10 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useActionState, useEffect, useRef, useState, useTransition } from "react";
+import { useActionState, useState, useTransition } from "react";
 import {
   createSerialAction,
-  getNextSerialNumberPreviewAction,
   lookupPatientAction,
   updateSerialAction,
   type CreateSerialState,
@@ -17,7 +16,7 @@ import { Banner } from "@/components/ui/card";
 import { Checkbox, Field, Input, Select, Textarea } from "@/components/ui/form";
 import { SearchIcon, UserIcon } from "@/components/ui/icons";
 import { SmsModal } from "./sms-modal";
-import { cn, toDigits } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 export interface DoctorOption {
   id: string;
@@ -71,13 +70,11 @@ export function NewSerialForm({
   doctors,
   defaultDoctorId,
   defaultDate,
-  initialNextSerialNumbers,
   requireAddress,
 }: {
   doctors: DoctorOption[];
   defaultDoctorId: string;
   defaultDate: string;
-  initialNextSerialNumbers: { new: number; old: number };
   requireAddress: boolean;
 }) {
   const router = useRouter();
@@ -86,51 +83,10 @@ export function NewSerialForm({
     FormData
   >(createSerialAction, {});
   const [patientType, setPatientType] = useState<"new" | "old">("new");
-  const [doctorId, setDoctorId] = useState(defaultDoctorId);
-  const [appointmentDate, setAppointmentDate] = useState(defaultDate);
-  const [nextSerialNumber, setNextSerialNumber] = useState<number | null>(
-    initialNextSerialNumbers.new,
-  );
-  const [previewError, setPreviewError] = useState("");
-  const skipInitialPreview = useRef(true);
   const [isReference, setIsReference] = useState(false);
   const [suggestions, setSuggestions] = useState<PatientSuggestion[]>([]);
   const [sms, setSms] = useState<SmsPayload | null>(null);
   const [lookupPending, startLookup] = useTransition();
-
-  useEffect(() => {
-    if (skipInitialPreview.current) {
-      skipInitialPreview.current = false;
-      return;
-    }
-    if (isReference) {
-      return;
-    }
-
-    let current = true;
-    void getNextSerialNumberPreviewAction({
-      doctorId,
-      appointmentDate,
-      patientType,
-    })
-      .then((result) => {
-        if (!current) return;
-        if (result.ok) {
-          setNextSerialNumber(result.nextSerialNumber);
-        } else {
-          setPreviewError(result.error);
-        }
-      })
-      .catch(() => {
-        if (current) {
-          setPreviewError("Could not load the next serial number. Please try again.");
-        }
-      });
-
-    return () => {
-      current = false;
-    };
-  }, [appointmentDate, doctorId, isReference, patientType]);
 
   async function handleLookup() {
     const input = document.getElementById("patientMobile") as HTMLInputElement | null;
@@ -165,37 +121,8 @@ export function NewSerialForm({
         {state.error && <Banner type="error">{state.error}</Banner>}
 
         <Field label="Patient type" required>
-          <PatientTypeTabs
-            value={patientType}
-            onChange={(value) => {
-              setPatientType(value);
-              setNextSerialNumber(null);
-              setPreviewError("");
-            }}
-          />
+          <PatientTypeTabs value={patientType} onChange={setPatientType} />
           <input type="hidden" name="patientType" value={patientType} />
-          <div
-            aria-live="polite"
-            className="mt-2 rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-[13px] text-brand-800"
-          >
-            {isReference ? (
-              "Reference entries do not receive a serial number."
-            ) : previewError ? (
-              <span role="alert">{previewError}</span>
-            ) : (
-              <>
-                Next {patientType} patient serial:{" "}
-                <strong>
-                  {nextSerialNumber == null
-                    ? "Loading…"
-                    : toDigits(nextSerialNumber)}
-                </strong>
-                <span className="ml-1 text-brand-700">
-                  (may change if another serial is added at the same time)
-                </span>
-              </>
-            )}
-          </div>
         </Field>
 
         <Field
@@ -207,12 +134,7 @@ export function NewSerialForm({
           <Select
             id="doctorId"
             name="doctorId"
-            value={doctorId}
-            onChange={(event) => {
-              setDoctorId(event.target.value);
-              setNextSerialNumber(null);
-              setPreviewError("");
-            }}
+            defaultValue={defaultDoctorId}
             required
             error={Boolean(state.fieldErrors?.doctorId)}
           >
@@ -238,12 +160,7 @@ export function NewSerialForm({
             id="appointmentDate"
             name="appointmentDate"
             type="date"
-            value={appointmentDate}
-            onChange={(event) => {
-              setAppointmentDate(event.target.value);
-              setNextSerialNumber(null);
-              setPreviewError("");
-            }}
+            defaultValue={defaultDate}
             required
             error={Boolean(state.fieldErrors?.appointmentDate)}
           />

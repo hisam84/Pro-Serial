@@ -4,7 +4,7 @@ import { getDb } from "@/db";
 import { clinics } from "@/db/schema";
 import { requireUser, toActor } from "@/lib/auth";
 import { canUseSerials } from "@/lib/rbac";
-import { currentCounter, listDoctorsForActor } from "@/lib/serials";
+import { listDoctorsForActor } from "@/lib/serials";
 import { todayInTz } from "@/lib/dates";
 import { NewSerialForm } from "@/components/serials/serial-form";
 import { LinkBack } from "@/components/ui/link-back";
@@ -38,19 +38,6 @@ export default async function NewSerialPage({ searchParams }: PageProps) {
     requestedDoctor && doctors.some((d) => d.id === requestedDoctor)
       ? requestedDoctor
       : (doctors[0]?.id ?? "");
-  const initialNextSerialNumbers = defaultDoctorId
-    ? await Promise.all(
-        (["new", "old"] as const).map(async (patientType) => {
-          const lastNumber = await currentCounter(db, {
-            clinicId: user.clinicId!,
-            doctorId: defaultDoctorId,
-            appointmentDate: defaultDate,
-            patientType,
-          });
-          return lastNumber + 1;
-        }),
-      )
-    : [1, 1];
 
   return (
     <div className="mx-auto max-w-xl space-y-4">
@@ -78,10 +65,6 @@ export default async function NewSerialPage({ searchParams }: PageProps) {
           }))}
           defaultDoctorId={defaultDoctorId}
           defaultDate={defaultDate}
-          initialNextSerialNumbers={{
-            new: initialNextSerialNumbers[0],
-            old: initialNextSerialNumbers[1],
-          }}
           requireAddress={clinic?.requireAddress ?? false}
         />
       )}
