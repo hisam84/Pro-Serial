@@ -212,20 +212,6 @@ export default async function SerialsPage({ searchParams }: PageProps) {
         />
       </div>
 
-      {counts.activeReport > 0 && (
-        <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-[13px] text-amber-900">
-          <span>
-            <strong className="font-semibold">{toDigits(counts.activeReport)}</strong> active report serial{counts.activeReport === 1 ? "" : "s"} waiting for review today.
-          </span>
-          <Link
-            href={`/report-serials?date=${encodeURIComponent(date)}&doctorId=${encodeURIComponent(doctorId)}`}
-            className="font-bold underline underline-offset-2 hover:text-amber-950"
-          >
-            Open report serials queue →
-          </Link>
-        </div>
-      )}
-
       {/* Filters */}
       <SerialFilters
         key={`${date}:${doctorId}:${query}:${tab}:${reportSubmission}`}

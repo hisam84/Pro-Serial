@@ -21,7 +21,7 @@ for (const file of files) {
   const result = spawnSync(
     process.platform === "win32" ? "npx.cmd" : "npx",
     ["vitest", "run", path.join("tests", file)],
-    { stdio: "inherit", shell: false },
+    { stdio: "inherit", shell: process.platform === "win32" },
   );
   if (result.status !== 0) {
     failed += 1;

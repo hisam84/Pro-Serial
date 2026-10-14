@@ -98,7 +98,7 @@ export function NewReportSerialForm({
               )}
             >
               <span className="text-[14px] font-bold">Report (New patient)</span>
-              <span className="text-[11px] text-amber-700">নতুন রোগী রিপোর্ট দেখাতে এসেছে</span>
+              <span className="text-[11px] text-amber-700">First-time report review</span>
             </button>
 
             <button
@@ -114,7 +114,7 @@ export function NewReportSerialForm({
               )}
             >
               <span className="text-[14px] font-bold">Report (Old patient)</span>
-              <span className="text-[11px] text-orange-700">পুরাতন রোগী রিপোর্ট দেখাতে এসেছে</span>
+              <span className="text-[11px] text-orange-700">Follow-up report review</span>
             </button>
           </div>
           <input type="hidden" name="patientType" value={patientType} />

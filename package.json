@@ -2,7 +2,7 @@
   "name": "serial-pro",
   "version": "1.0.0",
   "private": true,
-  "description": "Serial Pro — clinic patient serial & appointment management (mobile-first, Bangla UI)",
+  "description": "Serial Pro — clinic patient serial & appointment management (mobile-first, English UI)",
   "scripts": {
     "dev": "next dev",
     "build": "tsx scripts/migrate.ts && next build",
