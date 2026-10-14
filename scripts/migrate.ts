@@ -7,10 +7,21 @@
  * - Without DATABASE_URL: applies to the built-in PGlite dev database.
  */
 import path from "node:path";
+
+if (!process.env.DATABASE_URL && (process as any).loadEnvFile) {
+  try {
+    (process as any).loadEnvFile(".env.local");
+  } catch {}
+}
+
 import { applyMigrations } from "../src/db/migrate";
 import { closeDb, resolveDb } from "../src/db/index";
 
 async function main() {
+  if (!process.env.DATABASE_URL?.trim()) {
+    console.log("→ No DATABASE_URL set; skipping remote migration.");
+    return;
+  }
   const { db, driver } = await resolveDb();
   const migrationsDir = path.resolve("src/db/migrations");
   console.log(`→ Database driver: ${driver}`);
