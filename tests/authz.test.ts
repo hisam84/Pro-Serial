@@ -174,6 +174,9 @@ describe("tenant isolation & authorization", () => {
       instructions: "",
       smsTemplateNew: null,
       smsTemplateOld: null,
+      smsTemplateReport: null,
+      smsTemplateReportNew: null,
+      smsTemplateReportOld: null,
       status: "inactive",
     });
     expect(denied.ok).toBe(false);
@@ -185,6 +188,9 @@ describe("tenant isolation & authorization", () => {
       instructions: "",
       smsTemplateNew: null,
       smsTemplateOld: null,
+      smsTemplateReport: null,
+      smsTemplateReportNew: null,
+      smsTemplateReportOld: null,
       status: "active",
     });
     expect(deniedCreate.ok).toBe(false);

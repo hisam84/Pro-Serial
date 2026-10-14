@@ -39,7 +39,13 @@ export const userStatusEnum = pgEnum("user_status", ["active", "disabled"]);
 
 export const doctorStatusEnum = pgEnum("doctor_status", ["active", "inactive"]);
 
-export const patientTypeEnum = pgEnum("patient_type", ["new", "old"]);
+export const patientTypeEnum = pgEnum("patient_type", [
+  "new",
+  "old",
+  "report",
+  "report_new",
+  "report_old",
+]);
 
 export const appointmentStatusEnum = pgEnum("appointment_status", [
   "active",
@@ -111,6 +117,9 @@ export const doctors = pgTable(
     smsTemplate: text("sms_template"),
     smsTemplateNew: text("sms_template_new"),
     smsTemplateOld: text("sms_template_old"),
+    smsTemplateReport: text("sms_template_report"),
+    smsTemplateReportNew: text("sms_template_report_new"),
+    smsTemplateReportOld: text("sms_template_report_old"),
     status: doctorStatusEnum("status").notNull().default("active"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()

@@ -21,7 +21,7 @@ export default async function SmsTemplatesPage() {
         <LinkBack href="/settings">Settings</LinkBack>
         <h1 className="mt-1 text-xl font-bold text-slate-900">SMS template</h1>
         <p className="text-[13px] text-slate-500">
-          Set a separate message for new and old patients for each doctor.
+          Set a separate message for new, old, and report patients for each doctor.
         </p>
       </div>
 
@@ -31,6 +31,9 @@ export default async function SmsTemplatesPage() {
           name: d.name,
           smsTemplateNew: d.smsTemplateNew,
           smsTemplateOld: d.smsTemplateOld,
+          smsTemplateReport: d.smsTemplateReport,
+          smsTemplateReportNew: d.smsTemplateReportNew,
+          smsTemplateReportOld: d.smsTemplateReportOld,
         }))}
       />
     </div>

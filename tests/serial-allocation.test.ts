@@ -83,6 +83,93 @@ describe("serial allocation rules", () => {
     expect(r3.data?.serialNumber).toBe(2);
   });
 
+  it("gives separate sequences for report patients (report_new and report_old) and counts them accurately", async () => {
+    const f = await buildFixture();
+
+    const rNew = await createSerialEntry(
+      f.db,
+      serialParams({
+        actor: f.attendant,
+        doctorId: f.doctorId,
+        patientType: "new",
+        patientName: "New 1",
+        patientMobile: "01711111101",
+      }),
+    );
+    const rOld = await createSerialEntry(
+      f.db,
+      serialParams({
+        actor: f.attendant,
+        doctorId: f.doctorId,
+        patientType: "old",
+        patientName: "Old 1",
+        patientMobile: "01711111102",
+      }),
+    );
+    const rRepNew1 = await createSerialEntry(
+      f.db,
+      serialParams({
+        actor: f.attendant,
+        doctorId: f.doctorId,
+        patientType: "report_new",
+        patientName: "Report New 1",
+        patientMobile: "01711111103",
+      }),
+    );
+    const rRepOld1 = await createSerialEntry(
+      f.db,
+      serialParams({
+        actor: f.attendant,
+        doctorId: f.doctorId,
+        patientType: "report_old",
+        patientName: "Report Old 1",
+        patientMobile: "01711111104",
+      }),
+    );
+    const rRepNew2 = await createSerialEntry(
+      f.db,
+      serialParams({
+        actor: f.attendant,
+        doctorId: f.doctorId,
+        patientType: "report_new",
+        patientName: "Report New 2",
+        patientMobile: "01711111105",
+      }),
+    );
+    const rRepOld2 = await createSerialEntry(
+      f.db,
+      serialParams({
+        actor: f.attendant,
+        doctorId: f.doctorId,
+        patientType: "report_old",
+        patientName: "Report Old 2",
+        patientMobile: "01711111106",
+      }),
+    );
+
+    // Each patient type sequence starts at 1 independently!
+    expect(rNew.data?.serialNumber).toBe(1);
+    expect(rOld.data?.serialNumber).toBe(1);
+    expect(rRepNew1.data?.serialNumber).toBe(1);
+    expect(rRepOld1.data?.serialNumber).toBe(1);
+
+    // Increments sequentially within its own type
+    expect(rRepNew2.data?.serialNumber).toBe(2);
+    expect(rRepOld2.data?.serialNumber).toBe(2);
+
+    const serials = await listSerials(f.db, f.attendant, {
+      date: "2026-10-09",
+      doctorId: f.doctorId,
+    });
+    const counts = summarizeCounts(serials);
+    expect(counts.activeNew).toBe(1);
+    expect(counts.activeOld).toBe(1);
+    expect(counts.activeReportNew).toBe(2);
+    expect(counts.activeReportOld).toBe(2);
+    expect(counts.activeReport).toBe(4);
+    expect(counts.activeTotal).toBe(6);
+  });
+
   it("resets sequences per doctor and per date", async () => {
     const f = await buildFixture();
 

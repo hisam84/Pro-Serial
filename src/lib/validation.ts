@@ -85,13 +85,16 @@ export const doctorInputSchema = z.object({
   instructions: z.string().trim().max(600).default(""),
   smsTemplateNew: z.string().trim().max(1200).nullable().default(null),
   smsTemplateOld: z.string().trim().max(1200).nullable().default(null),
+  smsTemplateReport: z.string().trim().max(1200).nullable().default(null),
+  smsTemplateReportNew: z.string().trim().max(1200).nullable().default(null),
+  smsTemplateReportOld: z.string().trim().max(1200).nullable().default(null),
   status: z.enum(["active", "inactive"]).default("active"),
 });
 export type DoctorInput = z.infer<typeof doctorInputSchema>;
 
 export const smsTemplateSchema = z.object({
   doctorId: uuidSchema,
-  patientType: z.enum(["new", "old"]),
+  patientType: z.enum(["new", "old", "report", "report_new", "report_old"]),
   smsTemplate: z.string().trim().max(1200),
 });
 
@@ -120,7 +123,7 @@ export const serialCreateSchema = z
   .object({
     doctorId: uuidSchema,
     appointmentDate: isoDateSchema,
-    patientType: z.enum(["new", "old"]),
+    patientType: z.enum(["new", "old", "report", "report_new", "report_old"]),
     patientName: z.string().trim().min(2, "Patient name is required.").max(120),
     patientMobile: z.string().trim().min(7, "Mobile number is required.").max(25),
     patientAddress: z.string().trim().max(240).default(""),
@@ -187,6 +190,7 @@ export const reportFilterSchema = z.object({
       "datewise",
       "new",
       "old",
+      "report",
       "doctor",
       "cancellation",
       "summary",
@@ -196,7 +200,7 @@ export const reportFilterSchema = z.object({
   to: isoDateSchema.optional(),
   date: isoDateSchema.optional(),
   doctorId: z.string().regex(uuidRegex).optional().or(z.literal("")),
-  patientType: z.enum(["new", "old", ""]).default(""),
+  patientType: z.enum(["new", "old", "report", "report_new", "report_old", ""]).default(""),
   status: z.enum(["active", "cancelled", "completed", ""]).default(""),
   reportSubmission: z.enum(["submitted", "not_submitted", ""]).default(""),
 });

@@ -142,6 +142,10 @@ export function SerialCard({
                   ? "bg-emerald-100 text-emerald-800"
                 : row.patientType === "new"
                     ? "bg-sky-100 text-sky-800"
+                    : row.patientType === "report_new" || row.patientType === "report"
+                    ? "bg-amber-100 text-amber-800"
+                    : row.patientType === "report_old"
+                    ? "bg-orange-100 text-orange-800"
                     : "bg-violet-100 text-violet-800",
               )}
               aria-label={`Serial number ${row.serialNumber ?? ""}`}
@@ -159,7 +163,15 @@ export function SerialCard({
             {row.patientName}
           </Link>
           <Badge
-            variant={row.patientType === "new" ? "new" : "old"}
+            variant={
+              row.patientType === "new"
+                ? "new"
+                : row.patientType === "report_new" || row.patientType === "report"
+                ? "report_new"
+                : row.patientType === "report_old"
+                ? "report_old"
+                : "old"
+            }
             className="shrink-0"
           >
             {patientTypeLabel(row.patientType)}
@@ -248,6 +260,12 @@ export function SerialCard({
                     patientName={row.patientName}
                     className="col-span-2"
                   />
+                  <Link
+                    href={`/serials/new?patientType=${encodeURIComponent(row.patientType === "old" || row.patientType === "report_old" ? "report_old" : "report_new")}&doctorId=${encodeURIComponent(row.doctorId)}&date=${encodeURIComponent(row.appointmentDate)}&patientName=${encodeURIComponent(row.patientName)}&patientMobile=${encodeURIComponent(row.patientMobileDisplay)}&patientAddress=${encodeURIComponent(row.patientAddress || "")}`}
+                    className="col-span-2 flex min-h-11 items-center justify-center gap-1.5 rounded-lg border border-amber-300 bg-amber-50 text-[13px] font-medium text-amber-800 hover:bg-amber-100 transition-colors"
+                  >
+                    + New report serial ({row.patientType === "old" || row.patientType === "report_old" ? "Old patient" : "New patient"})
+                  </Link>
                   {whatsappLink && (
                     <a
                       href={whatsappLink}

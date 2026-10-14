@@ -38,6 +38,9 @@ const REPORT_TITLES: Record<string, string> = {
   datewise: "Date-wise serial list",
   new: "New-patient report",
   old: "Old-patient report",
+  report: "Report-patient report",
+  report_new: "Report-patient (New) report",
+  report_old: "Report-patient (Old) report",
   doctor: "Doctor-wise report",
   cancellation: "Cancellation report",
   summary: "Daily summary",
@@ -63,7 +66,13 @@ export default async function ReportsPage({ searchParams }: PageProps) {
   const from = first(sp.from) || date;
   const to = first(sp.to) || (report === "cancellation" || report === "summary" ? from : date);
   const doctorId = first(sp.doctorId);
-  const patientType = first(sp.patientType) as "" | "new" | "old";
+  const patientType = first(sp.patientType) as
+    | ""
+    | "new"
+    | "old"
+    | "report"
+    | "report_new"
+    | "report_old";
   const status = first(sp.status) as "" | "active" | "cancelled" | "completed";
   const reportSubmissionRaw = first(sp.reportSubmission);
   const reportSubmission: "" | "submitted" | "not_submitted" =
@@ -92,6 +101,15 @@ export default async function ReportsPage({ searchParams }: PageProps) {
       break;
     case "old":
       rows = await patientTypeReport(db, toActor(user), "old", filters);
+      break;
+    case "report":
+      rows = await patientTypeReport(db, toActor(user), "report", filters);
+      break;
+    case "report_new":
+      rows = await patientTypeReport(db, toActor(user), "report_new", filters);
+      break;
+    case "report_old":
+      rows = await patientTypeReport(db, toActor(user), "report_old", filters);
       break;
     case "cancellation":
       rows = await cancellationReport(db, toActor(user), filters);

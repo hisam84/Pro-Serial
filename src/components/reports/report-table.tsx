@@ -59,13 +59,31 @@ export function ReportTable({
                     className={`flex h-8 min-w-8 items-center justify-center rounded-lg px-1.5 text-base font-bold ${
                       r.patientType === "new"
                         ? "bg-sky-100 text-sky-800"
-                        : "bg-violet-100 text-violet-800"
+                        : r.patientType === "old"
+                        ? "bg-violet-100 text-violet-800"
+                        : r.patientType === "report_new"
+                        ? "bg-amber-100 text-amber-800"
+                        : r.patientType === "report_old"
+                        ? "bg-orange-100 text-orange-800"
+                        : "bg-amber-100 text-amber-800"
                     }`}
                   >
                     {r.serialNumber != null ? toDigits(r.serialNumber) : "—"}
                   </span>
                 )}
-                <Badge variant={r.patientType === "new" ? "new" : "old"}>
+                <Badge
+                  variant={
+                    r.patientType === "new"
+                      ? "new"
+                      : r.patientType === "old"
+                      ? "old"
+                      : r.patientType === "report_new"
+                      ? "report_new"
+                      : r.patientType === "report_old"
+                      ? "report_old"
+                      : "report"
+                  }
+                >
                   {patientTypeLabel(r.patientType)}
                 </Badge>
               </div>
@@ -146,6 +164,9 @@ export function SummaryGrid({
   summary: {
     activeNew: number;
     activeOld: number;
+    activeReport?: number;
+    activeReportNew?: number;
+    activeReportOld?: number;
     activeReference: number;
     cancelled: number;
     completed: number;
@@ -156,6 +177,8 @@ export function SummaryGrid({
   const items: [string, number, string][] = [
     ["New patient", summary.activeNew, "text-sky-700"],
     ["Old patient", summary.activeOld, "text-violet-700"],
+    ["Report (New)", summary.activeReportNew ?? 0, "text-amber-700"],
+    ["Report (Old)", summary.activeReportOld ?? 0, "text-orange-700"],
     ["Reference", summary.activeReference, "text-emerald-700"],
     ["Active serials", summary.activeTotal, "text-brand-700"],
     ["Cancelled", summary.cancelled, "text-red-600"],
@@ -163,7 +186,7 @@ export function SummaryGrid({
     ["Total entries", summary.totalEntries, "text-slate-800"],
   ];
   return (
-    <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+    <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
       {items.map(([label, value, color]) => (
         <div
           key={label}
@@ -187,6 +210,9 @@ export function DoctorSummaryTable({
     counts: {
       activeNew: number;
       activeOld: number;
+      activeReport: number;
+      activeReportNew?: number;
+      activeReportOld?: number;
       activeReference: number;
       cancelled: number;
       completed: number;
@@ -202,6 +228,8 @@ export function DoctorSummaryTable({
             <th className="px-3 py-2 font-semibold text-slate-600">Doctor</th>
             <th className="px-3 py-2 font-semibold text-slate-600">New</th>
             <th className="px-3 py-2 font-semibold text-slate-600">Old</th>
+            <th className="px-3 py-2 font-semibold text-slate-600">Report (New)</th>
+            <th className="px-3 py-2 font-semibold text-slate-600">Report (Old)</th>
             <th className="px-3 py-2 font-semibold text-slate-600">References</th>
             <th className="px-3 py-2 font-semibold text-slate-600">Cancelled</th>
             <th className="px-3 py-2 font-semibold text-slate-600">Completed</th>
@@ -216,6 +244,12 @@ export function DoctorSummaryTable({
               </td>
               <td className="px-3 py-2">{toDigits(d.counts.activeNew)}</td>
               <td className="px-3 py-2">{toDigits(d.counts.activeOld)}</td>
+              <td className="px-3 py-2">
+                {toDigits(d.counts.activeReportNew ?? d.counts.activeReport)}
+              </td>
+              <td className="px-3 py-2">
+                {toDigits(d.counts.activeReportOld ?? 0)}
+              </td>
               <td className="px-3 py-2">
                 {toDigits(d.counts.activeReference)}
               </td>

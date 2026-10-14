@@ -65,8 +65,14 @@ export default async function SerialsPage({ searchParams }: PageProps) {
       ? requestedDoctor
       : (doctors[0]?.id ?? "");
   const tabRaw = first(sp.tab);
-  const tab: "all" | "new" | "old" =
-    tabRaw === "new" || tabRaw === "old" ? tabRaw : "all";
+  const tab: "all" | "new" | "old" | "report" | "report_new" | "report_old" =
+    tabRaw === "new" ||
+    tabRaw === "old" ||
+    tabRaw === "report" ||
+    tabRaw === "report_new" ||
+    tabRaw === "report_old"
+      ? tabRaw
+      : "all";
   const query = first(sp.q).trim();
   const reportSubmissionRaw = first(sp.reportSubmission);
   const reportSubmission: "" | "submitted" | "not_submitted" =
@@ -88,6 +94,21 @@ export default async function SerialsPage({ searchParams }: PageProps) {
   const queueRows = rows.filter((r) => {
     if (tab === "new") return r.patientType === "new" || r.isReference;
     if (tab === "old") return r.patientType === "old" || r.isReference;
+    if (tab === "report")
+      return (
+        r.patientType === "report" ||
+        r.patientType === "report_new" ||
+        r.patientType === "report_old" ||
+        r.isReference
+      );
+    if (tab === "report_new")
+      return (
+        r.patientType === "report_new" ||
+        r.patientType === "report" ||
+        r.isReference
+      );
+    if (tab === "report_old")
+      return r.patientType === "report_old" || r.isReference;
     return true;
   });
   const searchedIds = new Set(searchedRows.map((row) => row.id));
@@ -103,6 +124,9 @@ export default async function SerialsPage({ searchParams }: PageProps) {
           id: doctorsTable.id,
           smsTemplateNew: doctorsTable.smsTemplateNew,
           smsTemplateOld: doctorsTable.smsTemplateOld,
+          smsTemplateReport: doctorsTable.smsTemplateReport,
+          smsTemplateReportNew: doctorsTable.smsTemplateReportNew,
+          smsTemplateReportOld: doctorsTable.smsTemplateReportOld,
         })
         .from(doctorsTable)
         .where(inArray(doctorsTable.id, doctorIds))
@@ -127,6 +151,9 @@ export default async function SerialsPage({ searchParams }: PageProps) {
         templateById.get(row.doctorId) ?? {
           smsTemplateNew: null,
           smsTemplateOld: null,
+          smsTemplateReport: null,
+          smsTemplateReportNew: null,
+          smsTemplateReportOld: null,
         },
         row.patientType,
       ),
@@ -175,9 +202,11 @@ export default async function SerialsPage({ searchParams }: PageProps) {
       </div>
 
       {/* Counts */}
-      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
         <StatCard label="New patient" value={toDigits(counts.activeNew)} accent="sky" />
         <StatCard label="Old patient" value={toDigits(counts.activeOld)} accent="violet" />
+        <StatCard label="Report (New)" value={toDigits(counts.activeReportNew)} accent="amber" />
+        <StatCard label="Report (Old)" value={toDigits(counts.activeReportOld)} accent="orange" />
         <StatCard label="Reference" value={toDigits(counts.activeReference)} accent="emerald" />
         <StatCard label="Cancelled" value={toDigits(counts.cancelled)} accent="red" />
         <StatCard label="Completed" value={toDigits(counts.completed)} accent="brand" />

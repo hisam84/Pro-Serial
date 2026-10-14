@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { eq, inArray } from "drizzle-orm";
 import { getDb } from "@/db";
@@ -65,6 +66,9 @@ export default async function SerialDetailPage({ params }: PageProps) {
     .select({
       smsTemplateNew: doctorsTable.smsTemplateNew,
       smsTemplateOld: doctorsTable.smsTemplateOld,
+      smsTemplateReport: doctorsTable.smsTemplateReport,
+      smsTemplateReportNew: doctorsTable.smsTemplateReportNew,
+      smsTemplateReportOld: doctorsTable.smsTemplateReportOld,
     })
     .from(doctorsTable)
     .where(eq(doctorsTable.id, row.doctorId))
@@ -87,6 +91,9 @@ export default async function SerialDetailPage({ params }: PageProps) {
       {
         smsTemplateNew: doctor?.smsTemplateNew ?? null,
         smsTemplateOld: doctor?.smsTemplateOld ?? null,
+        smsTemplateReport: doctor?.smsTemplateReport ?? null,
+        smsTemplateReportNew: doctor?.smsTemplateReportNew ?? null,
+        smsTemplateReportOld: doctor?.smsTemplateReportOld ?? null,
       },
       row.patientType,
     ),
@@ -131,7 +138,19 @@ export default async function SerialDetailPage({ params }: PageProps) {
               Serials {row.serialNumber != null ? toDigits(row.serialNumber) : "—"}
             </Badge>
           )}
-          <Badge variant={row.patientType === "new" ? "new" : "old"}>
+          <Badge
+            variant={
+              row.patientType === "new"
+                ? "new"
+                : row.patientType === "old"
+                  ? "old"
+                  : row.patientType === "report_new"
+                    ? "report_new"
+                    : row.patientType === "report_old"
+                      ? "report_old"
+                      : "report"
+            }
+          >
             {patientTypeLabel(row.patientType)}
           </Badge>
           <Badge
@@ -227,6 +246,35 @@ export default async function SerialDetailPage({ params }: PageProps) {
           )}
         </CardBody>
       </Card>
+
+      {(() => {
+        const targetReportType =
+          row.patientType === "old" || row.patientType === "report_old"
+            ? "report_old"
+            : "report_new";
+        const targetReportLabel =
+          targetReportType === "report_old"
+            ? "Create report serial (Old)"
+            : "Create report serial (New)";
+        return (
+          <Card>
+            <CardBody className="flex flex-wrap items-center justify-between gap-3 py-3">
+              <div>
+                <p className="text-[14px] font-semibold text-slate-800">Need a report serial?</p>
+                <p className="text-[12px] text-slate-500">
+                  Create a new serial for {row.patientName} to show test reports to the doctor ({patientTypeLabel(targetReportType)}).
+                </p>
+              </div>
+              <Link
+                href={`/serials/new?patientType=${targetReportType}&doctorId=${encodeURIComponent(row.doctorId)}&date=${encodeURIComponent(row.appointmentDate)}&patientName=${encodeURIComponent(row.patientName)}&patientMobile=${encodeURIComponent(row.patientMobileDisplay)}&patientAddress=${encodeURIComponent(row.patientAddress || "")}`}
+                className="shrink-0 rounded-lg border border-amber-300 bg-amber-50 px-3.5 py-2 text-[13px] font-medium text-amber-800 hover:bg-amber-100 transition-colors"
+              >
+                + {targetReportLabel}
+              </Link>
+            </CardBody>
+          </Card>
+        );
+      })()}
 
       {row.status === "active" && <DetailActions row={client} sms={sms} />}
 

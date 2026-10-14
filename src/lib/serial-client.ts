@@ -8,7 +8,7 @@ import type { SerialRow } from "@/lib/serials";
 export interface SerialClientRow {
   id: string;
   appointmentDate: string;
-  patientType: "new" | "old";
+  patientType: "new" | "old" | "report" | "report_new" | "report_old";
   serialNumber: number | null;
   isReference: boolean;
   referenceDetails: string | null;

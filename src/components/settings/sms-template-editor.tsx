@@ -9,6 +9,9 @@ import { Field, Select, Textarea } from "@/components/ui/form";
 import {
   DEFAULT_NEW_PATIENT_SMS_TEMPLATE,
   DEFAULT_OLD_PATIENT_SMS_TEMPLATE,
+  DEFAULT_REPORT_PATIENT_SMS_TEMPLATE,
+  DEFAULT_REPORT_NEW_SMS_TEMPLATE,
+  DEFAULT_REPORT_OLD_SMS_TEMPLATE,
   SMS_VARIABLES,
   renderSmsTemplate,
   sampleSmsInput,
@@ -20,21 +23,34 @@ export interface TemplateDoctor {
   name: string;
   smsTemplateNew: string | null;
   smsTemplateOld: string | null;
+  smsTemplateReport: string | null;
+  smsTemplateReportNew: string | null;
+  smsTemplateReportOld: string | null;
 }
+
+export type SmsTemplatePatientType = "new" | "old" | "report_new" | "report_old";
 
 function templateFor(
   doctor: TemplateDoctor | undefined,
-  patientType: "new" | "old",
+  patientType: SmsTemplatePatientType,
 ): string {
-  const template =
-    patientType === "new"
-      ? doctor?.smsTemplateNew
-      : doctor?.smsTemplateOld;
+  if (patientType === "new") {
+    return doctor?.smsTemplateNew?.trim() || DEFAULT_NEW_PATIENT_SMS_TEMPLATE;
+  }
+  if (patientType === "old") {
+    return doctor?.smsTemplateOld?.trim() || DEFAULT_OLD_PATIENT_SMS_TEMPLATE;
+  }
+  if (patientType === "report_new") {
+    return (
+      doctor?.smsTemplateReportNew?.trim() ||
+      doctor?.smsTemplateReport?.trim() ||
+      DEFAULT_REPORT_NEW_SMS_TEMPLATE
+    );
+  }
   return (
-    template?.trim() ||
-    (patientType === "new"
-      ? DEFAULT_NEW_PATIENT_SMS_TEMPLATE
-      : DEFAULT_OLD_PATIENT_SMS_TEMPLATE)
+    doctor?.smsTemplateReportOld?.trim() ||
+    doctor?.smsTemplateReport?.trim() ||
+    DEFAULT_REPORT_OLD_SMS_TEMPLATE
   );
 }
 
@@ -44,7 +60,7 @@ function templateFor(
  */
 export function SmsTemplateEditor({ doctors }: { doctors: TemplateDoctor[] }) {
   const [doctorId, setDoctorId] = useState(doctors[0]?.id ?? "");
-  const [patientType, setPatientType] = useState<"new" | "old">("new");
+  const [patientType, setPatientType] = useState<SmsTemplatePatientType>("new");
   const current = doctors.find((d) => d.id === doctorId);
   const [template, setTemplate] = useState(() =>
     templateFor(current, "new"),
@@ -70,7 +86,7 @@ export function SmsTemplateEditor({ doctors }: { doctors: TemplateDoctor[] }) {
     setTemplate(templateFor(doc, patientType));
   }
 
-  function selectPatientType(type: "new" | "old") {
+  function selectPatientType(type: SmsTemplatePatientType) {
     setPatientType(type);
     setTemplate(templateFor(current, type));
   }
@@ -108,7 +124,11 @@ export function SmsTemplateEditor({ doctors }: { doctors: TemplateDoctor[] }) {
               {d.name}
               {(patientType === "new"
                 ? d.smsTemplateNew
-                : d.smsTemplateOld)
+                : patientType === "old"
+                ? d.smsTemplateOld
+                : patientType === "report_new"
+                ? (d.smsTemplateReportNew ?? d.smsTemplateReport)
+                : (d.smsTemplateReportOld ?? d.smsTemplateReport))
                 ? ""
                 : " (default template)"}
             </option>
@@ -123,12 +143,14 @@ export function SmsTemplateEditor({ doctors }: { doctors: TemplateDoctor[] }) {
         <div
           role="radiogroup"
           aria-label="Patient type"
-          className="grid grid-cols-2 gap-1 rounded-xl border border-slate-200 bg-slate-100 p-1"
+          className="grid grid-cols-2 gap-1 rounded-xl border border-slate-200 bg-slate-100 p-1 sm:grid-cols-4"
         >
           {(
             [
               ["new", "New patient"],
               ["old", "Old patient"],
+              ["report_new", "Report (New)"],
+              ["report_old", "Report (Old)"],
             ] as const
           ).map(([type, label]) => (
             <button
@@ -141,7 +163,11 @@ export function SmsTemplateEditor({ doctors }: { doctors: TemplateDoctor[] }) {
                 patientType === type
                   ? type === "new"
                     ? "bg-white text-sky-800 shadow-sm"
-                    : "bg-white text-violet-800 shadow-sm"
+                    : type === "old"
+                    ? "bg-white text-violet-800 shadow-sm"
+                    : type === "report_new"
+                    ? "bg-white text-amber-800 shadow-sm"
+                    : "bg-white text-orange-800 shadow-sm"
                   : "text-slate-600 hover:text-slate-900"
               }`}
             >
@@ -160,7 +186,15 @@ export function SmsTemplateEditor({ doctors }: { doctors: TemplateDoctor[] }) {
         )}
 
         <Field
-          label={`${patientType === "new" ? "New" : "Old"} patient SMS template`}
+          label={`${
+            patientType === "new"
+              ? "New patient"
+              : patientType === "old"
+              ? "Old patient"
+              : patientType === "report_new"
+              ? "Report (New patient)"
+              : "Report (Old patient)"
+          } SMS template`}
           htmlFor="smsTemplate"
           error={state.fieldErrors?.smsTemplate}
           hint="Clear the field to use the built-in default template."

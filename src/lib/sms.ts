@@ -51,6 +51,18 @@ export const DEFAULT_OLD_PATIENT_SMS_TEMPLATE = `{{clinic_name}} — {{doctor_na
 Dear {{patient_name}}, your appointment date is {{appointment_date}}. Serial: {{serial_number}}.
 Thank you for choosing us again.`;
 
+export const DEFAULT_REPORT_PATIENT_SMS_TEMPLATE = `{{clinic_name}} — {{doctor_name}}
+Dear {{patient_name}}, your report review date is {{appointment_date}}. Serial: {{serial_number}}.
+Thank you.`;
+
+export const DEFAULT_REPORT_NEW_SMS_TEMPLATE = `{{clinic_name}} — {{doctor_name}}
+Dear {{patient_name}}, your test report review date is {{appointment_date}}. Report serial (New): {{serial_number}}.
+Thank you.`;
+
+export const DEFAULT_REPORT_OLD_SMS_TEMPLATE = `{{clinic_name}} — {{doctor_name}}
+Dear {{patient_name}}, your test report review date is {{appointment_date}}. Report serial (Old): {{serial_number}}.
+Thank you for choosing us again.`;
+
 export const REFERENCE_SERIAL_LABEL = "Not applicable";
 
 const VARIABLE_PATTERN = /\{\{\s*([a-z_][a-z0-9_]*)\s*\}\}/g;
@@ -114,7 +126,11 @@ export function unknownVariables(template: string): string[] {
 }
 
 export function patientTypeLabel(type: PatientType): string {
-  return type === "new" ? "New patient" : "Old patient";
+  if (type === "new") return "New patient";
+  if (type === "old") return "Old patient";
+  if (type === "report_new") return "Report (New)";
+  if (type === "report_old") return "Report (Old)";
+  return "Report";
 }
 
 /** Builds the render input for a real appointment. */

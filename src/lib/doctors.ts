@@ -9,7 +9,11 @@ import type { SessionUser } from "@/lib/auth";
 import {
   DEFAULT_NEW_PATIENT_SMS_TEMPLATE,
   DEFAULT_OLD_PATIENT_SMS_TEMPLATE,
+  DEFAULT_REPORT_PATIENT_SMS_TEMPLATE,
+  DEFAULT_REPORT_NEW_SMS_TEMPLATE,
+  DEFAULT_REPORT_OLD_SMS_TEMPLATE,
 } from "@/lib/sms";
+import type { PatientType } from "@/db/schema";
 import type { DoctorInput } from "@/lib/validation";
 import type { ServiceResult } from "@/lib/serials";
 
@@ -100,6 +104,9 @@ export async function createDoctor(
         instructions: input.instructions.trim(),
         smsTemplateNew: input.smsTemplateNew?.trim() || null,
         smsTemplateOld: input.smsTemplateOld?.trim() || null,
+        smsTemplateReport: input.smsTemplateReport?.trim() || null,
+        smsTemplateReportNew: input.smsTemplateReportNew?.trim() || null,
+        smsTemplateReportOld: input.smsTemplateReportOld?.trim() || null,
         status: input.status,
       })
       .returning();
@@ -140,6 +147,9 @@ export async function updateDoctor(
         instructions: input.instructions.trim(),
         smsTemplateNew: input.smsTemplateNew?.trim() || null,
         smsTemplateOld: input.smsTemplateOld?.trim() || null,
+        smsTemplateReport: input.smsTemplateReport?.trim() || null,
+        smsTemplateReportNew: input.smsTemplateReportNew?.trim() || null,
+        smsTemplateReportOld: input.smsTemplateReportOld?.trim() || null,
         status: input.status,
         updatedAt: new Date(),
       })
@@ -162,17 +172,39 @@ export async function updateDoctor(
 }
 
 /** Effective SMS template for a doctor and patient type. */
-export function effectiveSmsTemplate(doctor: {
-  smsTemplateNew?: string | null;
-  smsTemplateOld?: string | null;
-}, patientType: "new" | "old" = "new"): string {
-  const template =
-    patientType === "new" ? doctor.smsTemplateNew : doctor.smsTemplateOld;
+export function effectiveSmsTemplate(
+  doctor: {
+    smsTemplateNew?: string | null;
+    smsTemplateOld?: string | null;
+    smsTemplateReport?: string | null;
+    smsTemplateReportNew?: string | null;
+    smsTemplateReportOld?: string | null;
+  },
+  patientType: PatientType = "new",
+): string {
+  if (patientType === "new") {
+    return doctor.smsTemplateNew?.trim() || DEFAULT_NEW_PATIENT_SMS_TEMPLATE;
+  }
+  if (patientType === "old") {
+    return doctor.smsTemplateOld?.trim() || DEFAULT_OLD_PATIENT_SMS_TEMPLATE;
+  }
+  if (patientType === "report_new") {
+    return (
+      doctor.smsTemplateReportNew?.trim() ||
+      doctor.smsTemplateReport?.trim() ||
+      DEFAULT_REPORT_NEW_SMS_TEMPLATE
+    );
+  }
+  if (patientType === "report_old") {
+    return (
+      doctor.smsTemplateReportOld?.trim() ||
+      doctor.smsTemplateReport?.trim() ||
+      DEFAULT_REPORT_OLD_SMS_TEMPLATE
+    );
+  }
   return (
-    template?.trim() ||
-    (patientType === "new"
-      ? DEFAULT_NEW_PATIENT_SMS_TEMPLATE
-      : DEFAULT_OLD_PATIENT_SMS_TEMPLATE)
+    doctor.smsTemplateReport?.trim() ||
+    DEFAULT_REPORT_PATIENT_SMS_TEMPLATE
   );
 }
 
@@ -181,7 +213,7 @@ export async function saveSmsTemplate(
   actor: SessionUser,
   doctorId: string,
   template: string,
-  patientType: "new" | "old",
+  patientType: PatientType,
 ): Promise<ServiceResult<Doctor>> {
   if (actor.role !== "clinic_admin" || !actor.clinicId) {
     return fail("You do not have permission.");
@@ -191,16 +223,32 @@ export async function saveSmsTemplate(
 
   const value = template.trim() || null;
   const column =
-    patientType === "new" ? "smsTemplateNew" : "smsTemplateOld";
+    patientType === "new"
+      ? "smsTemplateNew"
+      : patientType === "old"
+      ? "smsTemplateOld"
+      : patientType === "report_new"
+      ? "smsTemplateReportNew"
+      : patientType === "report_old"
+      ? "smsTemplateReportOld"
+      : "smsTemplateReport";
   const previousValue =
-    patientType === "new" ? existing.smsTemplateNew : existing.smsTemplateOld;
+    patientType === "new"
+      ? existing.smsTemplateNew
+      : patientType === "old"
+      ? existing.smsTemplateOld
+      : patientType === "report_new"
+      ? existing.smsTemplateReportNew
+      : patientType === "report_old"
+      ? existing.smsTemplateReportOld
+      : existing.smsTemplateReport;
+
   const [updated] = await db
     .update(doctors)
-    .set(
-      patientType === "new"
-        ? { smsTemplateNew: value, updatedAt: new Date() }
-        : { smsTemplateOld: value, updatedAt: new Date() },
-    )
+    .set({
+      [column]: value,
+      updatedAt: new Date(),
+    })
     .where(eq(doctors.id, doctorId))
     .returning();
 

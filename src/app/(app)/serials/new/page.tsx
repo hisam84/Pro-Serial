@@ -39,6 +39,16 @@ export default async function NewSerialPage({ searchParams }: PageProps) {
       ? requestedDoctor
       : (doctors[0]?.id ?? "");
 
+  const requestedPatientType = first(sp.patientType);
+  const initialPatientType = (
+    ["new", "old", "report", "report_new", "report_old"].includes(requestedPatientType)
+      ? requestedPatientType
+      : "new"
+  ) as "new" | "old" | "report_new" | "report_old" | "report";
+  const initialPatientName = first(sp.patientName);
+  const initialPatientMobile = first(sp.patientMobile);
+  const initialPatientAddress = first(sp.patientAddress);
+
   return (
     <div className="mx-auto max-w-xl space-y-4">
       <div>
@@ -66,6 +76,10 @@ export default async function NewSerialPage({ searchParams }: PageProps) {
           defaultDoctorId={defaultDoctorId}
           defaultDate={defaultDate}
           requireAddress={clinic?.requireAddress ?? false}
+          initialPatientType={initialPatientType}
+          initialPatientName={initialPatientName}
+          initialPatientMobile={initialPatientMobile}
+          initialPatientAddress={initialPatientAddress}
         />
       )}
     </div>

@@ -26,6 +26,7 @@ export function DoctorForm({
     instructions: string;
     smsTemplateNew: string | null;
     smsTemplateOld: string | null;
+    smsTemplateReport?: string | null;
     status: string;
   };
 }) {
@@ -124,6 +125,23 @@ export function DoctorForm({
             name="smsTemplateOld"
             rows={4}
             defaultValue={doctor?.smsTemplateOld ?? ""}
+            className="font-mono text-[13px]"
+          />
+        </Field>
+      )}
+
+      {doctor && (
+        <Field
+          label="Report patient SMS template"
+          htmlFor="smsTemplateReport"
+          error={errors.smsTemplateReport}
+          hint="Leave blank to use the default template."
+        >
+          <Textarea
+            id="smsTemplateReport"
+            name="smsTemplateReport"
+            rows={4}
+            defaultValue={doctor?.smsTemplateReport ?? ""}
             className="font-mono text-[13px]"
           />
         </Field>

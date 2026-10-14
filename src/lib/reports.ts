@@ -83,21 +83,22 @@ export async function doctorWiseReport(
   const rows = await listSerials(db, actor, baseFilters(filters));
   const byDoctor = new Map<string, DoctorSummaryRow>();
   for (const row of rows) {
-    let entry = byDoctor.get(row.doctorId);
-    if (!entry) {
-      entry = {
+    if (!byDoctor.has(row.doctorId)) {
+      byDoctor.set(row.doctorId, {
         doctorId: row.doctorId,
         doctorName: row.doctorName,
         counts: {
           activeNew: 0,
           activeOld: 0,
+          activeReport: 0,
+          activeReportNew: 0,
+          activeReportOld: 0,
           activeReference: 0,
           cancelled: 0,
           completed: 0,
           activeTotal: 0,
         },
-      };
-      byDoctor.set(row.doctorId, entry);
+      });
     }
   }
   // summarize per doctor

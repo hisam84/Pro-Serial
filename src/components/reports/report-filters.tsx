@@ -10,6 +10,8 @@ const REPORT_TYPES = [
   ["datewise", "Date-wise serial list"],
   ["new", "New-patient report"],
   ["old", "Old-patient report"],
+  ["report_new", "Report-patient (New) report"],
+  ["report_old", "Report-patient (Old) report"],
   ["doctor", "Doctor-wise report"],
   ["cancellation", "Cancellation report"],
   ["summary", "Daily summary"],
@@ -142,6 +144,8 @@ export function ReportFilters({
             <option value="">All patients</option>
             <option value="new">New only</option>
             <option value="old">Old only</option>
+            <option value="report_new">Report (New) only</option>
+            <option value="report_old">Report (Old) only</option>
           </select>
         )}
         {(report === "datewise" || report === "doctor") && (

@@ -48,6 +48,9 @@ export async function createDoctorAction(
     smsTemplateOld: formData.get("smsTemplateOld")
       ? String(formData.get("smsTemplateOld"))
       : null,
+    smsTemplateReport: formData.get("smsTemplateReport")
+      ? String(formData.get("smsTemplateReport"))
+      : null,
     status: formData.get("status") === "inactive" ? "inactive" : "active",
   });
   if (!parsed.success) {
@@ -78,6 +81,9 @@ export async function updateDoctorAction(
       : null,
     smsTemplateOld: formData.get("smsTemplateOld")
       ? String(formData.get("smsTemplateOld"))
+      : null,
+    smsTemplateReport: formData.get("smsTemplateReport")
+      ? String(formData.get("smsTemplateReport"))
       : null,
     status: formData.get("status") === "inactive" ? "inactive" : "active",
   });

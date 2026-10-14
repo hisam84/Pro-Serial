@@ -1047,6 +1047,9 @@ class SerialNoLongerActiveError extends Error {
 export interface SerialCounts {
   activeNew: number;
   activeOld: number;
+  activeReport: number;
+  activeReportNew: number;
+  activeReportOld: number;
   activeReference: number;
   cancelled: number;
   completed: number;
@@ -1057,6 +1060,9 @@ export function summarizeCounts(rows: SerialRow[]): SerialCounts {
   const counts: SerialCounts = {
     activeNew: 0,
     activeOld: 0,
+    activeReport: 0,
+    activeReportNew: 0,
+    activeReportOld: 0,
     activeReference: 0,
     cancelled: 0,
     completed: 0,
@@ -1073,7 +1079,17 @@ export function summarizeCounts(rows: SerialRow[]): SerialCounts {
     }
     if (r.isReference) counts.activeReference += 1;
     else if (r.patientType === "new") counts.activeNew += 1;
-    else counts.activeOld += 1;
+    else if (r.patientType === "old") counts.activeOld += 1;
+    else if (r.patientType === "report_new") {
+      counts.activeReportNew += 1;
+      counts.activeReport += 1;
+    } else if (r.patientType === "report_old") {
+      counts.activeReportOld += 1;
+      counts.activeReport += 1;
+    } else if (r.patientType === "report") {
+      counts.activeReportNew += 1;
+      counts.activeReport += 1;
+    }
     counts.activeTotal += 1;
   }
   return counts;

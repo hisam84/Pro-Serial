@@ -24,42 +24,88 @@ export interface DoctorOption {
   specialty: string;
 }
 
-/** Patient type segmented control (New / Old). */
+/** Patient type segmented control (Regular New/Old vs Report New/Old). */
 function PatientTypeTabs({
   value,
   onChange,
 }: {
-  value: "new" | "old";
-  onChange: (v: "new" | "old") => void;
+  value: "new" | "old" | "report_new" | "report_old" | "report";
+  onChange: (v: "new" | "old" | "report_new" | "report_old") => void;
 }) {
+  const normalizedValue = value === "report" ? "report_new" : value;
   return (
-    <div
-      role="radiogroup"
-      aria-label="Patient type"
-      className="grid grid-cols-2 gap-1 rounded-lg border border-slate-300 bg-slate-100 p-1"
-    >
-      {(
-        [
-          ["new", "New patient"],
-          ["old", "Old patient"],
-        ] as const
-      ).map(([key, label]) => (
-        <button
-          key={key}
-          type="button"
-          role="radio"
-          aria-checked={value === key}
-          onClick={() => onChange(key)}
-          className={cn(
-            "h-10 rounded-md text-[15px] font-medium transition-colors",
-            value === key
-              ? "bg-white text-brand-800 shadow-sm"
-              : "text-slate-600 hover:text-slate-900",
-          )}
+    <div className="space-y-2.5">
+      <div>
+        <p className="mb-1 text-[12px] font-medium text-slate-500 uppercase tracking-wider">
+          Regular doctor visit
+        </p>
+        <div
+          role="radiogroup"
+          aria-label="Regular doctor visit"
+          className="grid grid-cols-2 gap-1 rounded-lg border border-slate-300 bg-slate-100 p-1"
         >
-          {label}
-        </button>
-      ))}
+          {(
+            [
+              ["new", "New patient"],
+              ["old", "Old patient"],
+            ] as const
+          ).map(([key, label]) => (
+            <button
+              key={key}
+              type="button"
+              role="radio"
+              aria-checked={normalizedValue === key}
+              onClick={() => onChange(key)}
+              className={cn(
+                "h-10 rounded-md text-[14px] font-medium transition-colors",
+                normalizedValue === key
+                  ? key === "new"
+                    ? "bg-white text-sky-800 shadow-sm"
+                    : "bg-white text-violet-800 shadow-sm"
+                  : "text-slate-600 hover:text-slate-900",
+              )}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <p className="mb-1 text-[12px] font-medium text-amber-700 uppercase tracking-wider">
+          Test report submission / review
+        </p>
+        <div
+          role="radiogroup"
+          aria-label="Test report review"
+          className="grid grid-cols-2 gap-1 rounded-lg border border-amber-300 bg-amber-50/70 p-1"
+        >
+          {(
+            [
+              ["report_new", "Report (New patient)"],
+              ["report_old", "Report (Old patient)"],
+            ] as const
+          ).map(([key, label]) => (
+            <button
+              key={key}
+              type="button"
+              role="radio"
+              aria-checked={normalizedValue === key}
+              onClick={() => onChange(key)}
+              className={cn(
+                "h-10 rounded-md text-[14px] font-medium transition-colors",
+                normalizedValue === key
+                  ? key === "report_new"
+                    ? "bg-white text-amber-800 shadow-sm"
+                    : "bg-white text-orange-800 shadow-sm"
+                  : "text-slate-600 hover:text-slate-900",
+              )}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
@@ -71,18 +117,28 @@ export function NewSerialForm({
   defaultDoctorId,
   defaultDate,
   requireAddress,
+  initialPatientType = "new",
+  initialPatientName = "",
+  initialPatientMobile = "",
+  initialPatientAddress = "",
 }: {
   doctors: DoctorOption[];
   defaultDoctorId: string;
   defaultDate: string;
   requireAddress: boolean;
+  initialPatientType?: "new" | "old" | "report_new" | "report_old" | "report";
+  initialPatientName?: string;
+  initialPatientMobile?: string;
+  initialPatientAddress?: string;
 }) {
   const router = useRouter();
   const [state, formAction, pending] = useActionState<
     CreateSerialState,
     FormData
   >(createSerialAction, {});
-  const [patientType, setPatientType] = useState<"new" | "old">("new");
+  const [patientType, setPatientType] = useState<"new" | "old" | "report_new" | "report_old">(() =>
+    initialPatientType === "report" ? "report_new" : initialPatientType,
+  );
   const [isReference, setIsReference] = useState(false);
   const [suggestions, setSuggestions] = useState<PatientSuggestion[]>([]);
   const [sms, setSms] = useState<SmsPayload | null>(null);
@@ -175,6 +231,7 @@ export function NewSerialForm({
           <Input
             id="patientName"
             name="patientName"
+            defaultValue={initialPatientName}
             placeholder="Enter the patient's full name"
             required
             autoComplete="off"
@@ -195,6 +252,7 @@ export function NewSerialForm({
               name="patientMobile"
               type="tel"
               inputMode="tel"
+              defaultValue={initialPatientMobile}
               placeholder="01XXXXXXXXX"
               required
               error={Boolean(state.fieldErrors?.patientMobile)}
@@ -253,6 +311,7 @@ export function NewSerialForm({
           <Input
             id="patientAddress"
             name="patientAddress"
+            defaultValue={initialPatientAddress}
             placeholder="Enter address"
             error={Boolean(state.fieldErrors?.patientAddress)}
           />
