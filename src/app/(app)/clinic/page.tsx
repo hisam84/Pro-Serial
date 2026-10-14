@@ -85,19 +85,34 @@ export default async function ClinicDashboard() {
           </h1>
           <p className="text-[13px] text-slate-500">{formatDateWithDay(today)}</p>
         </div>
-        <Link
-          href={`/serials/new?date=${encodeURIComponent(today)}`}
-          className={buttonClass("primary", "md")}
-        >
-          <PlusIcon size={18} />
-          New serial
-        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href={`/serials/new?date=${encodeURIComponent(today)}`}
+            className={buttonClass("primary", "md")}
+          >
+            <PlusIcon size={18} />
+            New serial
+          </Link>
+          <Link
+            href={`/report-serials/new?date=${encodeURIComponent(today)}`}
+            className={buttonClass("secondary", "md") + " border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100"}
+          >
+            <PlusIcon size={18} />
+            New report serial
+          </Link>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-6">
-        <StatCard label="New today" value={toDigits(counts.activeNew)} accent="sky" />
-        <StatCard label="Old today" value={toDigits(counts.activeOld)} accent="violet" />
-        <StatCard label="Report today" value={toDigits(counts.activeReport)} accent="amber" />
+        <Link href={`/serials?date=${encodeURIComponent(today)}`} className="block transition-transform hover:scale-[1.02]">
+          <StatCard label="New today" value={toDigits(counts.activeNew)} accent="sky" />
+        </Link>
+        <Link href={`/serials?date=${encodeURIComponent(today)}`} className="block transition-transform hover:scale-[1.02]">
+          <StatCard label="Old today" value={toDigits(counts.activeOld)} accent="violet" />
+        </Link>
+        <Link href={`/report-serials?date=${encodeURIComponent(today)}`} className="block transition-transform hover:scale-[1.02]">
+          <StatCard label="Report today" value={toDigits(counts.activeReport)} accent="amber" hint="View report serials →" />
+        </Link>
         <StatCard label="Reference" value={toDigits(counts.activeReference)} accent="emerald" />
         <StatCard label="Cancelled" value={toDigits(counts.cancelled)} accent="red" />
         <StatCard label="Completed" value={toDigits(counts.completed)} accent="brand" />

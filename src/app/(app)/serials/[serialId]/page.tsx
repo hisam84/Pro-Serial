@@ -266,7 +266,7 @@ export default async function SerialDetailPage({ params }: PageProps) {
                 </p>
               </div>
               <Link
-                href={`/serials/new?patientType=${targetReportType}&doctorId=${encodeURIComponent(row.doctorId)}&date=${encodeURIComponent(row.appointmentDate)}&patientName=${encodeURIComponent(row.patientName)}&patientMobile=${encodeURIComponent(row.patientMobileDisplay)}&patientAddress=${encodeURIComponent(row.patientAddress || "")}`}
+                href={`/report-serials/new?patientType=${targetReportType}&doctorId=${encodeURIComponent(row.doctorId)}&date=${encodeURIComponent(row.appointmentDate)}&patientName=${encodeURIComponent(row.patientName)}&patientMobile=${encodeURIComponent(row.patientMobileDisplay)}&patientAddress=${encodeURIComponent(row.patientAddress || "")}`}
                 className="shrink-0 rounded-lg border border-amber-300 bg-amber-50 px-3.5 py-2 text-[13px] font-medium text-amber-800 hover:bg-amber-100 transition-colors"
               >
                 + {targetReportLabel}

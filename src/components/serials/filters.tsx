@@ -147,65 +147,34 @@ export function SerialFilters({
       </label>
 
       {/* Category tabs */}
-      <div className="space-y-1.5">
-        <div
-          role="tablist"
-          aria-label="Doctor visit tabs"
-          className="grid grid-cols-3 gap-1 rounded-lg border border-slate-300 bg-slate-100 p-1"
-        >
-          {(
-            [
-              ["all", `All (${toDigits(counts.activeNew + counts.activeOld + counts.activeReport)})`],
-              ["new", `New (${toDigits(counts.activeNew)})`],
-              ["old", `Old (${toDigits(counts.activeOld)})`],
-            ] as const
-          ).map(([key, label]) => (
-            <button
-              key={key}
-              role="tab"
-              aria-selected={tab === key}
-              type="button"
-              onClick={() => update({ tab: key === "all" ? "" : key })}
-              className={cn(
-                "h-9 rounded-md text-[13px] font-medium transition-colors sm:text-[14px]",
-                tab === key
-                  ? "bg-white text-brand-800 shadow-sm"
-                  : "text-slate-600 hover:text-slate-900",
-              )}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-
-        <div
-          role="tablist"
-          aria-label="Report review tabs"
-          className="grid grid-cols-2 gap-1 rounded-lg border border-amber-300 bg-amber-50/70 p-1"
-        >
-          {(
-            [
-              ["report_new", `Report · New (${toDigits(counts.activeReportNew)})`],
-              ["report_old", `Report · Old (${toDigits(counts.activeReportOld)})`],
-            ] as const
-          ).map(([key, label]) => (
-            <button
-              key={key}
-              role="tab"
-              aria-selected={tab === key || (tab === "report" && key === "report_new")}
-              type="button"
-              onClick={() => update({ tab: key })}
-              className={cn(
-                "h-9 rounded-md text-[13px] font-medium transition-colors sm:text-[14px]",
-                tab === key || (tab === "report" && key === "report_new")
-                  ? "bg-white text-amber-900 shadow-sm font-semibold"
-                  : "text-amber-800 hover:text-amber-950",
-              )}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+      <div
+        role="tablist"
+        aria-label="Doctor visit tabs"
+        className="grid grid-cols-3 gap-1 rounded-lg border border-slate-300 bg-slate-100 p-1"
+      >
+        {(
+          [
+            ["all", `All (${toDigits(counts.activeNew + counts.activeOld)})`],
+            ["new", `New (${toDigits(counts.activeNew)})`],
+            ["old", `Old (${toDigits(counts.activeOld)})`],
+          ] as const
+        ).map(([key, label]) => (
+          <button
+            key={key}
+            role="tab"
+            aria-selected={tab === key}
+            type="button"
+            onClick={() => update({ tab: key === "all" ? "" : key })}
+            className={cn(
+              "h-9 rounded-md text-[13px] font-medium transition-colors sm:text-[14px]",
+              tab === key
+                ? "bg-white text-brand-800 shadow-sm"
+                : "text-slate-600 hover:text-slate-900",
+            )}
+          >
+            {label}
+          </button>
+        ))}
       </div>
     </div>
   );

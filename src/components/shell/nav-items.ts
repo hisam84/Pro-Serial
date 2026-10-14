@@ -7,6 +7,7 @@ import {
   ChartIcon,
   HomeIcon,
   ListIcon,
+  ReportSerialIcon,
   SettingsIcon,
   StethoscopeIcon,
   UserIcon,
@@ -33,7 +34,8 @@ export function navItemsForRole(role: string): NavItem[] {
     return [
       { href: "/clinic", label: "Dashboard", icon: HomeIcon },
       { href: "/serials", label: "Serials", icon: ListIcon, bottom: true },
-      { href: "/reports", label: "Reports", icon: ChartIcon, bottom: true },
+      { href: "/report-serials", label: "Report serials", icon: ReportSerialIcon, bottom: true },
+      { href: "/reports", label: "Reports", icon: ChartIcon },
       { href: "/clinic/doctors", label: "Doctors", icon: StethoscopeIcon, bottom: true },
       { href: "/clinic/users", label: "Staff", icon: UserIcon },
       { href: "/clinic/settings", label: "Clinic Settings", icon: BuildingIcon },
@@ -43,6 +45,7 @@ export function navItemsForRole(role: string): NavItem[] {
 
   return [
     { href: "/serials", label: "Serials", icon: ListIcon, bottom: true },
+    { href: "/report-serials", label: "Report serials", icon: ReportSerialIcon, bottom: true },
     { href: "/reports", label: "Reports", icon: ChartIcon, bottom: true },
     { href: "/settings", label: "Settings", icon: SettingsIcon, bottom: true },
   ];

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { getDb } from "@/db";
@@ -60,6 +61,19 @@ export default async function NewSerialPage({ searchParams }: PageProps) {
           Fill in the patient details to save the serial. After saving you can send
           an SMS.
         </p>
+      </div>
+
+      <div className="flex items-center justify-between gap-3 rounded-xl border border-amber-300 bg-amber-50/80 px-4 py-2.5 text-[13px] text-amber-900">
+        <div>
+          <span className="font-semibold">Showing a lab/diagnostic test report?</span>
+          <p className="text-[12px] text-amber-700">Add a report review serial for new or old patients on the dedicated page.</p>
+        </div>
+        <Link
+          href={`/report-serials/new?doctorId=${encodeURIComponent(defaultDoctorId)}&date=${encodeURIComponent(defaultDate)}`}
+          className="shrink-0 rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-700"
+        >
+          Add report serial →
+        </Link>
       </div>
 
       {doctors.length === 0 ? (

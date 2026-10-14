@@ -261,7 +261,7 @@ export function SerialCard({
                     className="col-span-2"
                   />
                   <Link
-                    href={`/serials/new?patientType=${encodeURIComponent(row.patientType === "old" || row.patientType === "report_old" ? "report_old" : "report_new")}&doctorId=${encodeURIComponent(row.doctorId)}&date=${encodeURIComponent(row.appointmentDate)}&patientName=${encodeURIComponent(row.patientName)}&patientMobile=${encodeURIComponent(row.patientMobileDisplay)}&patientAddress=${encodeURIComponent(row.patientAddress || "")}`}
+                    href={`/report-serials/new?patientType=${encodeURIComponent(row.patientType === "old" || row.patientType === "report_old" ? "report_old" : "report_new")}&doctorId=${encodeURIComponent(row.doctorId)}&date=${encodeURIComponent(row.appointmentDate)}&patientName=${encodeURIComponent(row.patientName)}&patientMobile=${encodeURIComponent(row.patientMobileDisplay)}&patientAddress=${encodeURIComponent(row.patientAddress || "")}`}
                     className="col-span-2 flex min-h-11 items-center justify-center gap-1.5 rounded-lg border border-amber-300 bg-amber-50 text-[13px] font-medium text-amber-800 hover:bg-amber-100 transition-colors"
                   >
                     + New report serial ({row.patientType === "old" || row.patientType === "report_old" ? "Old patient" : "New patient"})
