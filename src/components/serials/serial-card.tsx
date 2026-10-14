@@ -208,13 +208,20 @@ export function SerialCard({
       {detailsOpen && (
         <div className="mt-1 space-y-3 border-t border-slate-100 px-1 pb-1 pt-3">
           <div className="space-y-1.5 text-[13px] text-slate-600">
-            <a
-              href={`tel:${sms.dial}`}
-              className="inline-flex min-h-9 items-center gap-2 text-slate-700 hover:text-brand-700"
-            >
-              <PhoneIcon size={14} className="text-slate-400" />
-              {row.patientMobileDisplay}
-            </a>
+            {row.patientMobileDisplay ? (
+              <a
+                href={`tel:${sms.dial}`}
+                className="inline-flex min-h-9 items-center gap-2 text-slate-700 hover:text-brand-700"
+              >
+                <PhoneIcon size={14} className="text-slate-400" />
+                {row.patientMobileDisplay}
+              </a>
+            ) : (
+              <p className="inline-flex min-h-9 items-center gap-2 text-slate-400">
+                <PhoneIcon size={14} className="text-slate-300" />
+                No mobile number
+              </p>
+            )}
             {row.patientAddress && <p>{row.patientAddress}</p>}
             <p>{formatDateCompact(row.appointmentDate)}</p>
             {row.isReference && row.referenceDetails && (

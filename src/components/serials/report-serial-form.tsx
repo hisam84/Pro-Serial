@@ -162,11 +162,10 @@ export function NewReportSerialForm({
         {/* Mobile + Search */}
         <div>
           <Field
-            label="Mobile number"
+            label="Mobile number (optional)"
             htmlFor="patientMobile"
-            required
             error={state.fieldErrors?.patientMobile}
-            hint="Enter 11 digits (e.g. 017xxxxxxxx). Tap “Find” to reuse previous details."
+            hint="Optional. Enter 11 digits (e.g. 017xxxxxxxx) to send SMS or tap “Find” to reuse details."
           >
             <div className="flex gap-2">
               <Input
@@ -174,8 +173,7 @@ export function NewReportSerialForm({
                 name="patientMobile"
                 type="tel"
                 defaultValue={initialPatientMobile}
-                placeholder="01712345678"
-                required
+                placeholder="01712345678 (optional)"
                 autoComplete="off"
                 onBlur={handleLookup}
                 error={Boolean(state.fieldErrors?.patientMobile)}

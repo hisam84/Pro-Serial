@@ -137,7 +137,22 @@ async function findOrCreatePatient(
     mobile: string;
   },
 ): Promise<Patient> {
-  const mobile = normalizeMobile(params.mobile);
+  const rawMobile = params.mobile.trim();
+  if (!rawMobile) {
+    const [created] = await db
+      .insert(patients)
+      .values({
+        clinicId: params.clinicId,
+        name: params.name.trim(),
+        address: params.address.trim(),
+        mobileNormalized: "",
+        mobileDisplay: "",
+      })
+      .returning();
+    return created;
+  }
+
+  const mobile = normalizeMobile(rawMobile);
   if (!mobile.ok) {
     throw new Error(mobile.error ?? "invalid mobile");
   }
@@ -219,10 +234,24 @@ export async function createSerialEntry(
   const access = await assertDoctorAccess(db, params.actor, params.doctorId);
   if (!access.ok) return fail(access.error);
 
-  const mobile = normalizeMobile(params.patientMobile);
-  if (!mobile.ok) return fail(mobile.error ?? "Mobile number is invalid.", {
-    patientMobile: mobile.error ?? "Mobile number is invalid.",
-  });
+  const isReport =
+    params.patientType === "report" ||
+    params.patientType === "report_new" ||
+    params.patientType === "report_old";
+
+  const rawMobile = params.patientMobile.trim();
+  if (rawMobile) {
+    const mobile = normalizeMobile(rawMobile);
+    if (!mobile.ok) {
+      return fail(mobile.error ?? "Mobile number is invalid.", {
+        patientMobile: mobile.error ?? "Mobile number is invalid.",
+      });
+    }
+  } else if (!isReport) {
+    return fail("Mobile number is required.", {
+      patientMobile: "Mobile number is required.",
+    });
+  }
 
   if (params.requireAddress && !params.isReference && !params.patientAddress.trim()) {
     return fail("Address is required.", { patientAddress: "Address is required." });
@@ -520,10 +549,26 @@ export async function updateSerialEntry(
     return fail("Only active serials can be edited.");
   }
 
-  const mobile = normalizeMobile(params.patientMobile);
-  if (!mobile.ok) {
-    return fail(mobile.error ?? "Mobile number is invalid.", {
-      patientMobile: mobile.error ?? "Mobile number is invalid.",
+  const isReport =
+    existing.patientType === "report" ||
+    existing.patientType === "report_new" ||
+    existing.patientType === "report_old";
+
+  const rawMobile = params.patientMobile.trim();
+  let mobileNormalized = "";
+  let mobileDisplay = "";
+  if (rawMobile) {
+    const mobile = normalizeMobile(rawMobile);
+    if (!mobile.ok) {
+      return fail(mobile.error ?? "Mobile number is invalid.", {
+        patientMobile: mobile.error ?? "Mobile number is invalid.",
+      });
+    }
+    mobileNormalized = mobile.normalized;
+    mobileDisplay = mobile.display;
+  } else if (!isReport) {
+    return fail("Mobile number is required.", {
+      patientMobile: "Mobile number is required.",
     });
   }
 
@@ -534,8 +579,8 @@ export async function updateSerialEntry(
         .set({
           name: params.patientName.trim(),
           address: params.patientAddress.trim(),
-          mobileNormalized: mobile.normalized,
-          mobileDisplay: mobile.display,
+          mobileNormalized,
+          mobileDisplay,
           updatedAt: new Date(),
         })
         .where(eq(patients.id, existing.patientId));
@@ -571,7 +616,7 @@ export async function updateSerialEntry(
         },
         after: {
           patient_name: params.patientName,
-          patient_mobile: mobile.display,
+          patient_mobile: mobileDisplay,
           notes: params.notes,
         },
       });

@@ -688,4 +688,65 @@ describe("serial allocation rules", () => {
       `)),
     ).rejects.toThrow();
   });
+
+  it("allows creating and editing report serials with optional mobile while regular serials require it", async () => {
+    const f = await buildFixture();
+
+    // Regular serial fails without phone number
+    const regFail = await createSerialEntry(
+      f.db,
+      serialParams({
+        actor: f.attendant,
+        doctorId: f.doctorId,
+        patientType: "new",
+        patientName: "Regular Patient",
+        patientMobile: "",
+      }),
+    );
+    expect(regFail.ok).toBe(false);
+    expect(regFail.error).toContain("Mobile number is required");
+
+    // Report serial succeeds without phone number (report_new)
+    const repNew = await createSerialEntry(
+      f.db,
+      serialParams({
+        actor: f.attendant,
+        doctorId: f.doctorId,
+        patientType: "report_new",
+        patientName: "Report Patient New",
+        patientMobile: "",
+      }),
+    );
+    expect(repNew.ok).toBe(true);
+    expect(repNew.data?.patient.mobileDisplay).toBe("");
+    expect(repNew.data?.serialNumber).toBe(1);
+
+    // Report serial succeeds without phone number (report_old)
+    const repOld = await createSerialEntry(
+      f.db,
+      serialParams({
+        actor: f.attendant,
+        doctorId: f.doctorId,
+        patientType: "report_old",
+        patientName: "Report Patient Old",
+        patientMobile: "   ",
+      }),
+    );
+    expect(repOld.ok).toBe(true);
+    expect(repOld.data?.patient.mobileDisplay).toBe("");
+    expect(repOld.data?.serialNumber).toBe(1);
+
+    // Update report serial to keep mobile empty
+    const updated = await updateSerialEntry(f.db, {
+      actor: f.attendant,
+      appointmentId: repNew.data!.appointment.id,
+      patientName: "Report Patient Renamed",
+      patientMobile: "",
+      patientAddress: "",
+      referenceDetails: "",
+      notes: "Reviewed tests",
+    });
+    expect(updated.ok).toBe(true);
+    expect(updated.data?.patientMobileDisplay).toBe("");
+  });
 });

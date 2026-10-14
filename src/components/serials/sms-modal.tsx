@@ -62,10 +62,16 @@ export function SmsModal({
           <div>
             <dt className="text-slate-500">Mobile</dt>
             <dd className="flex items-center gap-1.5 font-medium text-slate-800">
-              <PhoneIcon size={14} className="text-slate-400" />
-              <a href={`tel:${payload.dial}`} className="underline decoration-slate-300">
-                {payload.mobileDisplay}
-              </a>
+              {payload.mobileDisplay ? (
+                <>
+                  <PhoneIcon size={14} className="text-slate-400" />
+                  <a href={`tel:${payload.dial}`} className="underline decoration-slate-300">
+                    {payload.mobileDisplay}
+                  </a>
+                </>
+              ) : (
+                <span className="text-slate-400">Not provided</span>
+              )}
             </dd>
           </div>
           <div>

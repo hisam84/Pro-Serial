@@ -125,13 +125,33 @@ export const serialCreateSchema = z
     appointmentDate: isoDateSchema,
     patientType: z.enum(["new", "old", "report", "report_new", "report_old"]),
     patientName: z.string().trim().min(2, "Patient name is required.").max(120),
-    patientMobile: z.string().trim().min(7, "Mobile number is required.").max(25),
+    patientMobile: z.string().trim().max(25).default(""),
     patientAddress: z.string().trim().max(240).default(""),
     isReference: z.boolean().default(false),
     referenceDetails: z.string().trim().max(240).default(""),
     notes: z.string().trim().max(600).default(""),
   })
   .superRefine((d, ctx) => {
+    const isReport =
+      d.patientType === "report" ||
+      d.patientType === "report_new" ||
+      d.patientType === "report_old";
+    if (!isReport) {
+      if (!d.patientMobile || d.patientMobile.length < 7) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Mobile number is required.",
+          path: ["patientMobile"],
+        });
+      }
+    } else if (d.patientMobile && d.patientMobile.length < 7) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Enter a valid mobile number.",
+        path: ["patientMobile"],
+      });
+    }
+
     if (d.isReference && !d.referenceDetails) {
       ctx.addIssue({
         code: "custom",
@@ -148,7 +168,7 @@ export type SerialCreateInput = z.infer<typeof serialCreateSchema>;
 export const serialUpdateSchema = z.object({
   appointmentId: uuidSchema,
   patientName: z.string().trim().min(2, "Patient name is required.").max(120),
-  patientMobile: z.string().trim().min(7, "Mobile number is required.").max(25),
+  patientMobile: z.string().trim().max(25).default(""),
   patientAddress: z.string().trim().max(240).default(""),
   referenceDetails: z.string().trim().max(240).default(""),
   notes: z.string().trim().max(600).default(""),

@@ -189,12 +189,16 @@ export default async function SerialDetailPage({ params }: PageProps) {
             <div>
               <dt className="text-[12px] text-slate-500">Mobile</dt>
               <dd>
-                <a
-                  href={`tel:${sms.dial}`}
-                  className="font-medium text-brand-700 underline-offset-2 hover:underline"
-                >
-                  {row.patientMobileDisplay}
-                </a>
+                {row.patientMobileDisplay ? (
+                  <a
+                    href={`tel:${sms.dial}`}
+                    className="font-medium text-brand-700 underline-offset-2 hover:underline"
+                  >
+                    {row.patientMobileDisplay}
+                  </a>
+                ) : (
+                  <span className="text-slate-400">Not provided</span>
+                )}
               </dd>
             </div>
             <div>

@@ -240,11 +240,19 @@ export function NewSerialForm({
         </Field>
 
         <Field
-          label="Mobile number"
+          label={
+            patientType === "report_new" || patientType === "report_old"
+              ? "Mobile number (optional)"
+              : "Mobile number"
+          }
           htmlFor="patientMobile"
-          required
+          required={patientType !== "report_new" && patientType !== "report_old"}
           error={state.fieldErrors?.patientMobile}
-          hint="Suggestions appear if an old patient exists with the same number."
+          hint={
+            patientType === "report_new" || patientType === "report_old"
+              ? "Optional. Suggestions appear if an old patient exists with the same number."
+              : "Suggestions appear if an old patient exists with the same number."
+          }
         >
           <div className="flex gap-2">
             <Input
@@ -253,8 +261,12 @@ export function NewSerialForm({
               type="tel"
               inputMode="tel"
               defaultValue={initialPatientMobile}
-              placeholder="01XXXXXXXXX"
-              required
+              placeholder={
+                patientType === "report_new" || patientType === "report_old"
+                  ? "01XXXXXXXXX (optional)"
+                  : "01XXXXXXXXX"
+              }
+              required={patientType !== "report_new" && patientType !== "report_old"}
               error={Boolean(state.fieldErrors?.patientMobile)}
             />
             <Button
@@ -434,9 +446,26 @@ export function EditSerialForm({
       </Field>
 
       <Field
-        label="Mobile number"
+        label={
+          row.patientType === "report" ||
+          row.patientType === "report_new" ||
+          row.patientType === "report_old"
+            ? "Mobile number (optional)"
+            : "Mobile number"
+        }
         htmlFor="patientMobile"
-        required
+        required={
+          row.patientType !== "report" &&
+          row.patientType !== "report_new" &&
+          row.patientType !== "report_old"
+        }
+        hint={
+          row.patientType === "report" ||
+          row.patientType === "report_new" ||
+          row.patientType === "report_old"
+            ? "Optional"
+            : undefined
+        }
         error={state.fieldErrors?.patientMobile}
       >
         <Input
@@ -445,7 +474,18 @@ export function EditSerialForm({
           type="tel"
           inputMode="tel"
           defaultValue={row.patientMobileDisplay}
-          required
+          placeholder={
+            row.patientType === "report" ||
+            row.patientType === "report_new" ||
+            row.patientType === "report_old"
+              ? "01XXXXXXXXX (optional)"
+              : "01XXXXXXXXX"
+          }
+          required={
+            row.patientType !== "report" &&
+            row.patientType !== "report_new" &&
+            row.patientType !== "report_old"
+          }
           error={Boolean(state.fieldErrors?.patientMobile)}
         />
       </Field>
